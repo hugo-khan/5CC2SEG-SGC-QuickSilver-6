@@ -1,0 +1,41 @@
+{% extends 'base_content.html' %}
+{% block content %}
+<section class="auth-shell py-5">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-6">
+        <p class="eyebrow text-uppercase fw-semibold mb-2 text-danger">Danger zone</p>
+        <h1 class="display-5 fw-bold mb-4">Delete your account permanently</h1>
+        <p class="lead text-muted mb-4">
+          This action removes your profile, saved preferences, and related activity.
+          It cannot be undone, so please make sure you have exported anything important first.
+        </p>
+        <ul class="auth-highlights">
+          <li>All current sessions are ended immediately.</li>
+          <li>Rejoining later will require a fresh invitation.</li>
+          <li>Team visibility into your past updates may be limited.</li>
+        </ul>
+      </div>
+      <div class="col-lg-5 ms-lg-auto">
+        <div class="card shadow-sm border-0 auth-panel">
+          <div class="card-body p-4 p-lg-5">
+            <div class="text-center mb-4">
+              <span class="badge rounded-pill bg-light text-danger mb-2">Delete account</span>
+              <p class="mb-0 text-muted">Confirm by typing DELETE and entering your password.</p>
+            </div>
+            <form action="{% url 'delete_account' %}" method="post" class="auth-form">
+              {% csrf_token %}
+              {% include 'partials/bootstrap_form.html' with form=form %}
+              <button type="submit" class="btn btn-danger w-100 mb-3">Delete my account</button>
+            </form>
+            <p class="text-center text-muted small mb-0">
+              Changed your mind? <a href="{% url 'dashboard' %}">Return to your dashboard.</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
