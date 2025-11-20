@@ -1,16 +1,54 @@
 {% extends 'base_content.html' %}
 {% block content %}
-<div class="container">
-  <div class="row">
-    <div class="col-sm-12 col-md-6 offset-md-3">
-      <h1>Log in</h1>
-      <form action="{% url 'log_in' %}" method="post">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next }}">
-        {% include 'partials/bootstrap_form.html' with form=form %}
-        <input type="submit" value="Log in" class="btn btn-primary">
-      </form>
+<section class="auth-shell py-5">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-6">
+        <p class="eyebrow text-uppercase fw-semibold mb-2">Welcome back</p>
+        <h1 class="display-5 fw-bold mb-4">Sign in to keep curating better recipes</h1>
+        <p class="lead text-muted mb-4">
+          Pick up right where you left off—track pantry items, bookmark seasonal
+          dishes, and collaborate with your team without missing a beat.
+        </p>
+        <ul class="auth-highlights">
+          <li>Audit-friendly access history for every teammate</li>
+          <li>Secure email + password and Google sign-in options</li>
+          <li>No pop-ups or distractions—just focused cooking</li>
+        </ul>
+      </div>
+      <div class="col-lg-5 ms-lg-auto">
+        <div class="card shadow-sm border-0 auth-panel">
+          <div class="card-body p-4 p-lg-5">
+            <div class="text-center mb-4">
+              <span class="badge rounded-pill bg-light text-primary mb-2">Log in</span>
+              <p class="mb-0 text-muted">Use your credentials or a connected Google account.</p>
+            </div>
+            <form action="{% url 'log_in' %}" method="post" class="auth-form">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next }}">
+              {% include 'partials/bootstrap_form.html' with form=form %}
+              <button type="submit" class="btn btn-primary w-100 mb-3">Continue</button>
+            </form>
+            {% if google_login_enabled and google_login_url %}
+            <div class="divider text-center my-4">
+              <span>or</span>
+            </div>
+            <a href="{{ google_login_url }}" class="btn btn-outline-dark w-100 oauth-button">
+              <span class="oauth-icon">G</span>
+              Continue with Google
+            </a>
+            {% else %}
+            <p class="text-muted small text-center mb-0">
+              Google sign-in becomes available once credentials are configured.
+            </p>
+            {% endif %}
+            <p class="text-center text-muted small mt-4 mb-0">
+              Need an account? <a href="{% url 'sign_up' %}">Create one in under a minute.</a>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 {% endblock %}

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -41,7 +42,7 @@ class PasswordView(LoginRequiredMixin, FormView):
         """
 
         form.save()
-        login(self.request, self.request.user)
+        login(self.request, self.request.user, backend=settings.AUTHENTICATION_BACKENDS[0])
         return super().form_valid(form)
 
     def get_success_url(self):
