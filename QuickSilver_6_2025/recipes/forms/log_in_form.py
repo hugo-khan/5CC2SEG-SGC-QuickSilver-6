@@ -15,8 +15,25 @@ class LogInForm(forms.Form):
         password (CharField): The user's password, rendered as a password input.
     """
 
-    username = forms.CharField(label="Username")
-    password = forms.CharField(label="Password", widget=forms.PasswordInput())
+    username = forms.CharField(
+        label="Username",
+        widget=forms.TextInput(
+            attrs={
+                'placeholder': '@username',
+                'autocomplete': 'username',
+                'autocapitalize': 'none',
+            }
+        ),
+    )
+    password = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(
+            attrs={
+                'placeholder': '••••••••',
+                'autocomplete': 'current-password',
+            }
+        ),
+    )
 
     def get_user(self):
         """

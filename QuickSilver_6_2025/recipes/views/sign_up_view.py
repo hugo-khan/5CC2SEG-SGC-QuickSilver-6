@@ -29,7 +29,7 @@ class SignUpView(LoginProhibitedMixin, FormView):
         `get_success_url()`.
         """
         self.object = form.save()
-        login(self.request, self.object)
+        login(self.request, self.object, backend=settings.AUTHENTICATION_BACKENDS[0])
         return super().form_valid(form)
 
     def get_success_url(self):
