@@ -1,0 +1,39 @@
+{% extends 'base_content.html' %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1>Your feed</h1>
+      <p class="text-muted mb-0">Recipes from authors you follow.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'recipe_list' %}">Browse all recipes</a>
+  </div>
+
+  {% if recipes %}
+    <div class="list-group">
+      {% for recipe in recipes %}
+        <a class="list-group-item list-group-item-action" href="{% url 'recipe_detail' recipe.pk %}">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ recipe.title }}</h5>
+            <small>{{ recipe.created_at|date:"j M Y" }}</small>
+          </div>
+          <p class="mb-1 text-muted">By {{ recipe.author.username }}</p>
+          {% if recipe.summary %}
+            <p class="mb-1">{{ recipe.summary }}</p>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </div>
+    {% include 'partials/pagination.html' %}
+  {% else %}
+    <div class="alert alert-info">
+      {% if has_followed_users %}
+        None of the people you follow have published recipes yet.
+      {% else %}
+        You are not following anyone yet. Explore recipes and follow authors to build your feed.
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
