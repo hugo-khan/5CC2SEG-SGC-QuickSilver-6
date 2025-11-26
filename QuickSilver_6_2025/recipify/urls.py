@@ -18,17 +18,31 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from recipes import views
+
+from recipes.views.home_view import home
+from recipes.views.dashboard_view import dashboard
+from recipes.views.log_in_view import LogInView
+from recipes.views.log_out_view import log_out
+from recipes.views.password_view import PasswordView
+from recipes.views.profile_view import profile  # Display profile
+from recipes.views.edit_profile_view import ProfileUpdateView  # Edit profile
+from recipes.views.sign_up_view import SignUpView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.home, name='home'),
-    path('dashboard/', views.dashboard, name='dashboard'),
-    path('log_in/', views.LogInView.as_view(), name='log_in'),
-    path('log_out/', views.log_out, name='log_out'),
-    path('password/', views.PasswordView.as_view(), name='password'),
-    path('profile/', views.ProfileUpdateView.as_view(), name='profile'),
-    path('sign_up/', views.SignUpView.as_view(), name='sign_up'),
-    path('', include('recipes.urls')),
+    path("admin/", admin.site.urls),
+    path("", home, name="home"),
+    path("dashboard/", dashboard, name="dashboard"),
+    path("log_in/", LogInView.as_view(), name="log_in"),
+    path("log_out/", log_out, name="log_out"),
+    path("password/", PasswordView.as_view(), name="password"),
+    path("profile/", profile, name="profile"),  # Display profile
+    path(
+        "profile/edit/",
+        ProfileUpdateView.as_view(),
+        name="profile_edit",
+    ),  # Edit profile
+    path("sign_up/", SignUpView.as_view(), name="sign_up"),
+    path("", include("recipes.urls")),
 ]
+
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

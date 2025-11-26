@@ -1,14 +1,48 @@
 {% extends 'base_content.html' %}
+{% load static %}
+{% load recipe_helpers %}
+
 {% block content %}
-<div class="container">
+<div class="container mt-4">
   <div class="row">
-    <div class="col-12">
-      <h1>Edit profile</h1>
-      <form action="{% url 'profile' %}" method="post">
-        {% csrf_token %}
-        {% include 'partials/bootstrap_form.html' with form=form %}
-        <input type="submit" value="Update" class="btn btn-primary">
-      </form>
+    <!-- Left Navigation Tabs-->
+    <div class="col-md-4 col-lg-3">
+      <div class="recipe-card">
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <a href="?tab=profile-info" class="list-group-item nav-tab {% if request.GET.tab != 'recipes' and request.GET.tab != 'account' %}active{% endif %}">
+              <i class="bi bi-person me-2"></i>Profile Info
+            </a>
+            <a href="?tab=recipes" class="list-group-item nav-tab {% if request.GET.tab == 'recipes' %}active{% endif %}">
+              <i class="bi bi-bookmark-heart me-2"></i>Saved Recipes
+            </a>
+            <a href="?tab=account" class="list-group-item nav-tab {% if request.GET.tab == 'account' %}active{% endif %}">
+              <i class="bi bi-shield-check me-2"></i>Account Settings
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Content -->
+    <div class="col-md-8 col-lg-9">
+      {% if request.GET.tab != 'recipes' and request.GET.tab != 'account' %}
+      <div id="profile-info" class="content-section">
+        {% include 'partials/profile_tabs/profile_info.html' %}
+      </div>
+      {% endif %}
+      
+      {% if request.GET.tab == 'recipes' %}
+      <div id="recipes" class="content-section">
+        {% include 'partials/profile_tabs/saved_recipes.html' %}
+      </div>
+      {% endif %}
+      
+      {% if request.GET.tab == 'account' %}
+      <div id="account" class="content-section">
+        {% include 'partials/profile_tabs/account_settings.html' %}
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>

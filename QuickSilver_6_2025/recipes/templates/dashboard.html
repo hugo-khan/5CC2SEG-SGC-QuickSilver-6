@@ -1,9 +1,22 @@
 {% extends 'base_content.html' %}
+{% load static %}
+{% load recipe_helpers %}
+
 {% block content %}
 <div class="container">
-  <div class="row">
+  <!-- ... your header ... -->
+  
+  <div class="row mt-4">
     <div class="col-12">
-      <h1>Welcome to your dashboard {{ user.username }}</h1>
+      <div class="recipe-card">
+        <!-- ... card header ... -->
+        <div class="card-body p-0">
+          <form method="post">  <!-- ADD THIS FORM -->
+            {% csrf_token %}
+            {% include 'partials/profile_tabs/recipe_table.html' with recipes=recipes saved_recipe_ids=saved_recipe_ids %}
+          </form>  <!-- CLOSE FORM -->
+        </div>
+      </div>
     </div>
   </div>
 </div>

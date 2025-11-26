@@ -1,0 +1,16 @@
+{% load recipe_helpers %}
+
+<div class="recipe-card">
+  <!-- ... card header ... -->
+  <div class="card-body p-0">
+    {% if saved_recipes_prefetched %}
+      <form method="post">  
+        {% csrf_token %}
+        {% with recipe_list=saved_recipes_prefetched|map_attribute:"recipe" %}
+          {% include 'partials/profile_tabs/recipe_table.html' with recipes=recipe_list saved_recipe_ids=saved_recipe_ids %}
+        {% endwith %}
+      </form>  <!-- Closing form -->
+    {% else %}
+    {% endif %}
+  </div>
+</div>
