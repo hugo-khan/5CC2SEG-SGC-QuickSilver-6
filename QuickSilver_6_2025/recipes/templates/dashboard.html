@@ -13,7 +13,7 @@
         <div class="card-body p-0">
           <form method="post">  <!-- ADD THIS FORM -->
             {% csrf_token %}
-            {% include 'partials/profile_tabs/recipe_table.html' with recipes=recipes saved_recipe_ids=saved_recipe_ids %}
+            {% include 'partials/recipe_table.html' with recipes=recipes saved_recipe_ids=saved_recipe_ids %}
           </form>  <!-- CLOSE FORM -->
         </div>
       </div>

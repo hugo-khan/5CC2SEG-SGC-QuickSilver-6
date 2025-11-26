@@ -1,16 +1,17 @@
-{% load recipe_helpers %}
-
-<div class="recipe-card">
-  <!-- ... card header ... -->
-  <div class="card-body p-0">
-    {% if saved_recipes_prefetched %}
-      <form method="post">  
-        {% csrf_token %}
-        {% with recipe_list=saved_recipes_prefetched|map_attribute:"recipe" %}
-          {% include 'partials/profile_tabs/recipe_table.html' with recipes=recipe_list saved_recipe_ids=saved_recipe_ids %}
-        {% endwith %}
-      </form>  <!-- Closing form -->
-    {% else %}
-    {% endif %}
-  </div>
+<!-- partials/profile_tabs/saved_recipes.html -->
+<div class="content-section">
+  <h3 class="mb-4">Saved Recipes</h3>
+  
+  {% if saved_recipes %}
+    <p class="text-muted mb-3">You have {{ saved_recipes|length }} saved recipes.</p>
+    
+    {% include '../recipe_table.html' with recipes=saved_recipes saved_recipe_ids=saved_recipe_ids %}
+    
+  {% else %}
+    <div class="empty-state">
+      <i class="bi bi-bookmark-heart empty-state-icon"></i>
+      <h4 class="text-muted mt-3">No Saved Recipes</h4>
+      <p class="text-muted">Save recipes you like to find them here later.</p>
+    </div>
+  {% endif %}
 </div>

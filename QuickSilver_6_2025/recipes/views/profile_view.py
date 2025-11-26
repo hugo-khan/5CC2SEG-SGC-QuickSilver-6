@@ -1,5 +1,7 @@
+# In profile_view.py
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from recipes.models import SavedRecipe, Recipe
 
 @login_required
@@ -20,18 +22,24 @@ def profile(request):
         except Recipe.DoesNotExist:
             pass
         
-        # Stay on the same tab
+        # Stay on the same tab - FIXED
         tab = request.GET.get('tab', '')
         if tab:
-            return redirect(f'profile?tab={tab}')
+            # Use reverse to get the URL and then add the query parameter
+            return redirect(f"{reverse('profile')}?tab={tab}")
         return redirect('profile')
     
-    # Normal GET request
-    saved_recipes = current_user.saved_recipes.all().select_related('recipe', 'recipe__created_by')
-    saved_recipe_ids = saved_recipes.values_list('recipe_id', flat=True)
+    # Normal GET request - use prefetch_related for better performance
+    saved_recipes_relations = current_user.saved_recipes.select_related('recipe__created_by').all()
     
-    return render(request, 'profile.html', {
+    # Extract the actual Recipe objects
+    saved_recipes = [saved_recipe.recipe for saved_recipe in saved_recipes_relations]
+    saved_recipe_ids = [recipe.id for recipe in saved_recipes]
+    
+    context = {
         'user': current_user,
-        'saved_recipe_ids': list(saved_recipe_ids),
-        'saved_recipes_prefetched': saved_recipes,
-    })
+        'saved_recipe_ids': saved_recipe_ids,
+        'saved_recipes': saved_recipes,
+    }
+    
+    return render(request, 'profile.html', context)
