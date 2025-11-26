@@ -37,6 +37,15 @@
               {% include 'partials/bootstrap_form.html' with form=form %}
               <button type="submit" class="btn btn-primary w-100 mb-3">Create account</button>
             </form>
+            {% if google_login_enabled and google_login_url %}
+            <div class="divider text-center my-4">
+              <span>or</span>
+            </div>
+            <a href="{{ google_login_url }}" class="btn btn-outline-dark w-100 oauth-button">
+              <span class="oauth-icon">G</span>
+              Sign up with Google
+            </a>
+            {% endif %}
             <p class="text-center text-muted small mb-0">
               Already have an account? <a href="{% url 'log_in' %}">Log in instead.</a>
             </p>
