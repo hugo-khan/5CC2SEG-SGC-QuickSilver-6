@@ -1,0 +1,54 @@
+{% load recipe_helpers %}
+
+{% if recipes %}
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 recipe-table">
+      <thead>
+        <tr>
+          <th scope="col" style="width: 80%">Recipe Title</th>
+          <th scope="col" style="width: 20%">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for recipe in recipes %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                <h6 class="mb-0">{{ recipe.title }}</h6>
+                <small class="text-muted">
+                  By {{ recipe.created_by.username }} • 
+                  {{ recipe.cooking_time|format_cooking_time }} • 
+                  <span class="badge difficulty-badge {{ recipe.difficulty|get_difficulty_class }}">
+                    {{ recipe.difficulty|title }}
+                  </span>
+                </small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <form method="post" action="" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
+              <input type="hidden" name="action" value="toggle">
+              
+              {% with is_saved=recipe.id|is_recipe_saved:saved_recipe_ids %}
+              <button type="submit" class="btn btn-link p-0 heart-icon {% if is_saved %}saved{% endif %}" 
+                      title="{% if is_saved %}Remove from saved{% else %}Save recipe{% endif %}">
+                <i class="bi {% if is_saved %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+              </button>
+              {% endwith %}
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="empty-state">
+    <i class="bi bi-journal-plus empty-state-icon"></i>
+    <h4 class="text-muted mt-3">No Recipes Available</h4>
+    <p class="text-muted">Check back later for new recipes.</p>
+  </div>
+{% endif %}

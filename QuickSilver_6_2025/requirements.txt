@@ -8,3 +8,4 @@ Faker==33.1.0
 libgravatar==1.0.4
 lxml==6.0.2
 sqlparse==0.5.3
+faker
