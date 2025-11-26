@@ -1,0 +1,34 @@
+add into actual feed html template
+
+{% for comment in recipe.comments.all|slice:":3" %}
+    <div class="border p-2 mb-2 rounded">
+        <strong>{{ comment.user.username }}</strong>
+        <small class="text-muted ms-2">{{ comment.created_at|date:"F j, g:i a" }}</small>
+        <p>{{ comment.text }}</p>
+    
+        <form method="POST" action="{% url 'toggle_like' recipe.id %}">
+            {% csrf_token %}
+            {% if user.is_authenticated %}
+                {% if user in recipe.likes.all %}
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        💔 Unlike
+                </button>
+                {% else %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                ❤️ Like
+                </button>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'sign_in' %}" class="btn btn-sm btn-outline-secondary">
+                ❤️ Like (Login Required)
+            </a>
+        {% endif %}
+            </form>
+    
+    </div>
+{% empty %}
+    <p>No comments yet.</p>
+{% endfor %}
+
+<!-- Link to see all comments on the recipe page -->
+<a href="{% url 'recipe_detail' recipe.id %}" class="small">View all comments →</a>
