@@ -1,0 +1,30 @@
+# ------------------------------------
+# Dependencies and Environments
+# ------------------------------------
+# Python virtual environments
+venv/
+.venv/
+
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# ------------------------------------
+# Django & Local Data
+# ------------------------------------
+# Local SQLite database file
+db.sqlite3
+
+# Static files that are collected/generated (where STATIC_ROOT is set)
+/assets/
+
+# Uploaded media (if MEDIA_ROOT is used for user uploads)
+/media/
+
+# ------------------------------------
+# Configuration & Security
+# ------------------------------------
+# Local settings files (where you store secrets/credentials)
+local_settings.py
+.env
