@@ -18,6 +18,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
+from recipes.views.recipe_search_view import recipe_search
+from recipes.views.author_recipes_view import author_recipes
 from recipes import views
 
 urlpatterns = [
@@ -29,5 +31,9 @@ urlpatterns = [
     path('password/', views.PasswordView.as_view(), name='password'),
     path('profile/', views.ProfileUpdateView.as_view(), name='profile'),
     path('sign_up/', views.SignUpView.as_view(), name='sign_up'),
+    
+    path('recipes/search/', recipe_search, name='recipe_search'),
+    path('author/<int:author_id>/recipes/', author_recipes, name='author_recipes'),
+
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
