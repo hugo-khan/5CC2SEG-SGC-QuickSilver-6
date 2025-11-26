@@ -5,12 +5,20 @@ from django.utils import timezone
 
 class Recipe(models.Model):
     """
-    A published recipe authored by a user.
-
-    This model merges the original recipe fields (author, summary, prep/cook time,
-    servings, publication flag) with the newer fields (cooking_time, difficulty)
-    so that both sets of features work together.
+    Unified Recipe model that keeps all fields from both branches so that:
+    - original timing/difficulty/publishing fields continue to work
+    - newer dietary/popularity fields are also available
+    - both naming schemes (`title`/`summary` and `name`/`description`) coexist
     """
+
+    DIETARY_CHOICES = [
+        ("vegan", "Vegan"),
+        ("vegetarian", "Vegetarian"),
+        ("gluten_free", "Gluten Free"),
+        ("dairy_free", "Dairy Free"),
+        ("nut_free", "Nut Free"),
+        ("none", "No Restrictions"),
+    ]
 
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -18,11 +26,14 @@ class Recipe(models.Model):
         related_name="recipes",
     )
 
-    # Core content
+    # Core content (keep both naming conventions)
     title = models.CharField(max_length=200)
     summary = models.CharField(max_length=255, blank=True)
     ingredients = models.TextField(help_text="List ingredients separated by commas")
     instructions = models.TextField()
+
+    name = models.CharField(max_length=255)
+    description = models.TextField()
 
     # Time & servings
     prep_time_minutes = models.PositiveIntegerField(blank=True, null=True)
@@ -44,15 +55,26 @@ class Recipe(models.Model):
         default="easy",
     )
 
+    # Newer dietary/popularity fields
+    date_posted = models.DateTimeField(auto_now_add=True)
+    dietary_requirement = models.CharField(
+        max_length=50, choices=DIETARY_CHOICES, default="none"
+    )
+    popularity = models.IntegerField(default=0)
+
     # Timestamps
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["-created_at", "-date_posted"]
 
     def __str__(self) -> str:
-        return self.title
+        """
+        Prefer the newer `name` field for consistency with the newer admin/views,
+        but fall back to `title` if needed.
+        """
+        return self.name or self.title
 
     @property
     def total_time_minutes(self) -> int:

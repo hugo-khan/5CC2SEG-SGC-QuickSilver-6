@@ -27,11 +27,17 @@ from recipes.views.password_view import PasswordView
 from recipes.views.profile_view import profile  # Display profile
 from recipes.views.edit_profile_view import ProfileUpdateView  # Edit profile
 from recipes.views.sign_up_view import SignUpView
+from recipes.views.recipe_search_view import recipe_search
+from recipes.views.author_recipes_view import author_recipes
+
 
 urlpatterns = [
+    # Core pages
     path("admin/", admin.site.urls),
     path("", home, name="home"),
     path("dashboard/", dashboard, name="dashboard"),
+
+    # Auth & profile
     path("log_in/", LogInView.as_view(), name="log_in"),
     path("log_out/", log_out, name="log_out"),
     path("password/", PasswordView.as_view(), name="password"),
@@ -42,6 +48,12 @@ urlpatterns = [
         name="profile_edit",
     ),  # Edit profile
     path("sign_up/", SignUpView.as_view(), name="sign_up"),
+
+    # Recipe-related features from the other branch
+    path("recipes/search/", recipe_search, name="recipe_search"),
+    path("author/<int:author_id>/recipes/", author_recipes, name="author_recipes"),
+
+    # Include app URLs
     path("", include("recipes.urls")),
 ]
 

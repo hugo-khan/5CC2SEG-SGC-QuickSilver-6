@@ -1,13 +1,37 @@
 from django.contrib import admin
-
 from recipes.models import Follow, Recipe, User
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ("title", "author", "created_at", "is_published")
-    list_filter = ("is_published", "created_at")
-    search_fields = ("title", "summary", "author__username")
+    """
+    Admin for Recipe that exposes both the original timing/difficulty fields
+    and the newer dietary/popularity fields so all features remain usable.
+    """
+
+    # Combine fields from both versions of Recipe
+    list_display = (
+        "title",  # original
+        "author",
+        "dietary_requirement",  # newer
+        "popularity",  # newer
+        "created_at",  # original timestamp
+        "is_published",  # original
+    )
+    list_filter = (
+        "dietary_requirement",
+        "created_at",
+        "popularity",
+        "is_published",
+        "difficulty",
+    )
+    search_fields = (
+        "title",
+        "summary",
+        "description",
+        "author__username",
+    )
+    readonly_fields = ("date_posted", "created_at", "updated_at")
     autocomplete_fields = ("author",)
 
 

@@ -1,4 +1,6 @@
-from .user import *
-from .recipe import *
-from .follow import *
-from .saved_recipes import *
+from .user import User
+from .recipe import Recipe
+from .follow import Follow
+from .saved_recipes import SavedRecipe
+
+__all__ = ['User', 'Recipe', 'Follow', 'SavedRecipe']
