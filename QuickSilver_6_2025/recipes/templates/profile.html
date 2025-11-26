@@ -1,59 +1,49 @@
 {% extends 'base_content.html' %}
 {% load static %}
+{% load recipe_helpers %}
+
 {% block content %}
 <div class="container mt-4">
   <div class="row">
     <!-- Left Navigation Tabs-->
     <div class="col-md-4 col-lg-3">
-      <div class="card shadow-sm border-0">
+      <div class="recipe-card">
         <div class="card-body p-0">
           <div class="list-group list-group-flush">
-            <button class="list-group-item list-group-item-action active" onclick="showTab('profile-info')">
+            <a href="?tab=profile-info" class="list-group-item nav-tab {% if request.GET.tab != 'recipes' and request.GET.tab != 'account' %}active{% endif %}">
               <i class="bi bi-person me-2"></i>Profile Info
-            </button>
-            <button class="list-group-item list-group-item-action" onclick="showTab('recipes')">
+            </a>
+            <a href="?tab=recipes" class="list-group-item nav-tab {% if request.GET.tab == 'recipes' %}active{% endif %}">
               <i class="bi bi-bookmark-heart me-2"></i>Saved Recipes
-            </button>
-            <button class="list-group-item list-group-item-action" onclick="showTab('account')">
+            </a>
+            <a href="?tab=account" class="list-group-item nav-tab {% if request.GET.tab == 'account' %}active{% endif %}">
               <i class="bi bi-shield-check me-2"></i>Account Settings
-            </button>
+            </a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Right Content Chosen -->
+    <!-- Right Content -->
     <div class="col-md-8 col-lg-9">
-      <div id="profile-info" class="tab-content">
+      {% if request.GET.tab != 'recipes' and request.GET.tab != 'account' %}
+      <div id="profile-info" class="content-section">
         {% include 'partials/profile_tabs/profile_info.html' %}
       </div>
+      {% endif %}
       
-      <div id="recipes" class="tab-content" style="display: none;">
+      {% if request.GET.tab == 'recipes' %}
+      <div id="recipes" class="content-section">
         {% include 'partials/profile_tabs/saved_recipes.html' %}
       </div>
+      {% endif %}
       
-      <div id="account" class="tab-content" style="display: none;">
+      {% if request.GET.tab == 'account' %}
+      <div id="account" class="content-section">
         {% include 'partials/profile_tabs/account_settings.html' %}
       </div>
+      {% endif %}
     </div>
   </div>
 </div>
-
-<script>
-function showTab(tabName) {
-  // Hide all of the tabs first
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.style.display = 'none';
-  });
-  
-  // Show only selected tabs
-  document.getElementById(tabName).style.display = 'block';
-  
-  // Update active state in navigation
-  document.querySelectorAll('.list-group-item').forEach(item => {
-    item.classList.remove('active');
-  });
-  event.target.classList.add('active');
-}
-</script>
 {% endblock %}
