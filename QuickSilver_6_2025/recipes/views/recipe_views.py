@@ -5,8 +5,8 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
-from recipes.forms import RecipeForm
-from recipes.models import Follow, Recipe, User
+from recipes.forms import RecipeForm, CommentForm
+from recipes.models import Comment, Follow, Recipe, User
 
 
 class RecipeListView(ListView):
@@ -29,12 +29,33 @@ class RecipeDetailView(DetailView):
     context_object_name = "recipe"
 
     def get_context_data(self, **kwargs):
+        """
+        Combine the original recipe detail context (follow status etc.)
+        with the additional data needed for comments and likes.
+        """
+
         context = super().get_context_data(**kwargs)
+        recipe = self.object
         user = self.request.user
-        if user.is_authenticated and self.object.author != user:
+
+        # Follow flag from the original implementation
+        if user.is_authenticated and recipe.author != user:
             context["is_following_author"] = Follow.objects.filter(
-                follower=user, followed=self.object.author
+                follower=user,
+                followed=recipe.author,
             ).exists()
+
+        # Comment feature: full comment list and form
+        comments = Comment.objects.filter(recipe=recipe).select_related("user")
+        context["comments"] = list(comments)
+        context["comment_form"] = CommentForm()
+
+        # Like feature: expose convenience flags/counters
+        context["total_likes"] = recipe.likes.count()
+        context["has_liked"] = (
+            user.is_authenticated and recipe.likes.filter(pk=user.pk).exists()
+        )
+
         return context
 
 
@@ -110,8 +131,29 @@ class FeedView(LoginRequiredMixin, ListView):
         )
 
     def get_context_data(self, **kwargs):
+        """
+        Extend the original feed context with a mapping of
+        recipe.id -> top 3 newest comments, as expected by the
+        comment feature tests.
+        """
+
         context = super().get_context_data(**kwargs)
         context["has_followed_users"] = self.request.user.following.exists()
+
+        recipes = context.get("object_list", [])
+        comments_by_recipe = {}
+
+        if recipes:
+            comments = (
+                Comment.objects.filter(recipe__in=recipes)
+                .select_related("user", "recipe")
+                .order_by("-created_at")
+            )
+            for recipe in recipes:
+                recipe_comments = [c for c in comments if c.recipe_id == recipe.id][:3]
+                comments_by_recipe[recipe.id] = recipe_comments
+
+        context["comments"] = comments_by_recipe
         return context
 
 

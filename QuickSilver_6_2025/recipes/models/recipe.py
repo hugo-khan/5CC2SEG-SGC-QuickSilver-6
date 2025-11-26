@@ -95,3 +95,14 @@ class Recipe(models.Model):
         Backwards-compatible alias for code that expects `created_by`.
         """
         return self.author
+
+    # Users who liked this recipe.
+    # We keep the ManyToMany interface expected by the like feature/tests,
+    # but route it through the dedicated Like model so we don't lose any
+    # information or constraints.
+    likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="liked_recipes",
+        through="Like",
+        blank=True,
+    )
