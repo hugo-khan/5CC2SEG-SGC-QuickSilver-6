@@ -40,12 +40,15 @@ def author_recipes(request, author_id):
     paginator = Paginator(recipes, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    query_params = request.GET.copy()
+    query_params.pop('page', None)
     
     context = {
         'author': author,
         'form': form,
         'page_obj': page_obj,
         'recipes': page_obj.object_list,
+        'querystring': query_params.urlencode(),
     }
     
     return render(request, 'author_recipes.html', context)
