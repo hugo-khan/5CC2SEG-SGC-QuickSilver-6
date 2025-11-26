@@ -19,16 +19,18 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from recipes.views.home_view import home
+from recipes.views.author_recipes_view import author_recipes
+from recipes.views.comment_view import AddCommentView
 from recipes.views.dashboard_view import dashboard
+from recipes.views.edit_profile_view import ProfileUpdateView  # Edit profile
+from recipes.views.home_view import home
+from recipes.views.like_view import ToggleLikeView
 from recipes.views.log_in_view import LogInView
 from recipes.views.log_out_view import log_out
 from recipes.views.password_view import PasswordView
 from recipes.views.profile_view import profile  # Display profile
-from recipes.views.edit_profile_view import ProfileUpdateView  # Edit profile
-from recipes.views.sign_up_view import SignUpView
 from recipes.views.recipe_search_view import recipe_search
-from recipes.views.author_recipes_view import author_recipes
+from recipes.views.sign_up_view import SignUpView
 
 
 urlpatterns = [
@@ -49,9 +51,19 @@ urlpatterns = [
     ),  # Edit profile
     path("sign_up/", SignUpView.as_view(), name="sign_up"),
 
-    # Recipe-related features from the other branch
+    # Recipe-related features (search, author listing, comments, likes)
     path("recipes/search/", recipe_search, name="recipe_search"),
     path("author/<int:author_id>/recipes/", author_recipes, name="author_recipes"),
+    path(
+        "recipe/<int:recipe_id>/comment/",
+        AddCommentView.as_view(),
+        name="add_comment",
+    ),
+    path(
+        "recipe/<int:recipe_id>/like/",
+        ToggleLikeView.as_view(),
+        name="toggle_like",
+    ),
 
     # Include app URLs
     path("", include("recipes.urls")),

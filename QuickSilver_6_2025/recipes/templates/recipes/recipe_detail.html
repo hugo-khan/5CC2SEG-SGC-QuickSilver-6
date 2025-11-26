@@ -47,9 +47,74 @@
           {% if recipe.servings %}<li>Servings: {{ recipe.servings }}</li>{% endif %}
         </ul>
       </div>
+
+      {# --- Like button from the comment/like feature --- #}
+      <div class="mt-3">
+        <form method="post" action="{% url 'toggle_like' recipe.id %}" class="mt-2 mb-3">
+          {% csrf_token %}
+          {% if user.is_authenticated %}
+            {% if has_liked %}
+              <button type="submit" class="btn btn-danger">
+                💔 Unlike ({{ total_likes }})
+              </button>
+            {% else %}
+              <button type="submit" class="btn btn-outline-danger">
+                ❤️ Like ({{ total_likes }})
+              </button>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'log_in' %}" class="btn btn-outline-secondary">
+              ❤️ Like (Login Required)
+            </a>
+          {% endif %}
+        </form>
+      </div>
+
+      {# --- Comments list and modal from the other branch --- #}
+      <div class="mt-4">
+        <h4>Comments</h4>
+
+        <!-- Scrollable comment container -->
+        <div style="max-height: 300px; overflow-y: auto;" class="border rounded p-3">
+          {% for comment in comments %}
+            <div class="border rounded p-2 mb-2">
+              <strong>{{ comment.user.username }}</strong>
+              <small class="text-muted ms-2">{{ comment.created_at|date:"F j, g:i a" }}</small>
+              <p>{{ comment.text }}</p>
+            </div>
+          {% empty %}
+            <p>No comments yet.</p>
+          {% endfor %}
+        </div>
+
+        <!-- Button to open comment modal -->
+        <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#commentModal">
+          Add Comment
+        </button>
+      </div>
+
+      <!-- Add Comment Modal -->
+      <div class="modal fade" id="commentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+
+            <div class="modal-header">
+              <h5 class="modal-title">Write a Comment</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+              <form method="post" action="{% url 'add_comment' recipe.id %}">
+                {% csrf_token %}
+                {{ comment_form.as_p }}
+                <button type="submit" class="btn btn-success mt-2">Submit</button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 {% endblock %}
-
-
