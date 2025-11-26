@@ -1,0 +1,70 @@
+add into recipe detail html
+
+button
+<h1>{{ recipe.title }}</h1>
+
+<form method="POST" action="{% url 'toggle_like' recipe.id %}" class="mt-2 mb-3">
+    {% csrf_token %}
+    {% if user.is_authenticated %}
+        {% if user in recipe.likes.all %}
+            <button type="submit" class="btn btn-danger">
+                💔 Unlike
+            </button>
+        {% else %}
+            <button type="submit" class="btn btn-outline-danger">
+                ❤️ Like
+            </button>
+        {% endif %}
+    {% else %}
+        <a href="{% url 'sign_in' %}" class="btn btn-outline-secondary">
+            ❤️ Like (Login Required)
+        </a>
+    {% endif %}
+</form>
+
+<h4>Comments</h4>
+
+<!-- Scrollable comment container -->
+<div style="max-height: 300px; overflow-y: auto;" class="border rounded p-3">
+
+    {% for comment in recipe.comments.all %}
+        <div class="border rounded p-2 mb-2">
+            <strong>{{ comment.user.username }}</strong>
+            <small class="text-muted ms-2">{{ comment.created_at|date:"F j, g:i a" }}</small>
+            <p>{{ comment.text }}</p>
+        </div>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+
+</div>
+
+
+<!-- adding actual button icon -->
+<button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#commentModal">
+    Add Comment
+</button>
+
+
+
+<!-- Add Comment Modal - should be right at the end of the html file -->
+<div class="modal fade" id="commentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Write a Comment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <form method="POST" action="{% url 'add_comment' recipe.id %}">
+                    {% csrf_token %}
+                    {{ comment_form.as_p }}
+                    <button type="submit" class="btn btn-success mt-2">Submit</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>

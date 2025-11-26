@@ -1,0 +1,56 @@
+[
+  {
+    "model": "recipes.user",
+    "pk": 10,
+    "fields": {
+      "first_name": "Alice",
+      "last_name": "Test",
+      "username": "@alice",
+      "email": "alice@example.com",
+      "password": "pbkdf2_sha256$260000$test$nlr2YtkC0UZpC34olbnI7u/6xx4HuDN0oVoleQ7yN0g=",
+      "is_active": true
+    }
+  },
+  {
+    "model": "recipes.user",
+    "pk": 11,
+    "fields": {
+      "first_name": "Bob",
+      "last_name": "Builder",
+      "username": "@bob",
+      "email": "bob@example.com",
+      "password": "pbkdf2_sha256$260000$test$nlr2YtkC0UZpC34olbnI7u/6xx4HuDN0oVoleQ7yN0g=",
+      "is_active": true
+    }
+  },
+  {
+    "model": "recipes.user",
+    "pk": 12,
+    "fields": {
+      "first_name": "Carol",
+      "last_name": "Tester",
+      "username": "@carol",
+      "email": "carol@example.com",
+      "password": "pbkdf2_sha256$260000$test$nlr2YtkC0UZpC34olbnI7u/6xx4HuDN0oVoleQ7yN0g=",
+      "is_active": true
+    }
+  },
+  {
+    "model": "recipes.recipe",
+    "pk": 20,
+    "fields": {
+      "title": "Chocolate Cake",
+      "description": "Simple chocolate cake recipe",
+      "likes": [10, 11]
+    }
+  },
+  {
+    "model": "recipes.recipe",
+    "pk": 21,
+    "fields": {
+      "title": "Pasta Bolognese",
+      "description": "Classic Italian pasta dish",
+      "likes": []
+    }
+  }
+]
