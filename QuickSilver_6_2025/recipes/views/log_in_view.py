@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from django.views import View
 from urllib.parse import urlencode
 from recipes.forms import LogInForm
@@ -68,7 +68,10 @@ class LogInView(LoginProhibitedMixin, View):
 
         if not getattr(settings, 'GOOGLE_OAUTH_ENABLED', False):
             return None
-        base_url = reverse('socialaccount_login', args=['google'])
+        try:
+            base_url = reverse('google_login')
+        except NoReverseMatch:
+            return None
         params = {'process': 'login'}
         if self.next:
             params['next'] = self.next

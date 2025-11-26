@@ -1,0 +1,48 @@
+{% extends 'base_content.html' %}
+{% block content %}
+<section class="auth-shell py-5">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-6">
+        <p class="eyebrow text-uppercase fw-semibold mb-2">Connect your account</p>
+        <h1 class="display-5 fw-bold mb-4">Continue with Google to access Recipify.</h1>
+        <p class="lead text-muted mb-4">
+          We use Google only to verify who you are and retrieve your basic profile
+          information (name and email). No recipes or collaboration data is ever
+          stored in your Google account.
+        </p>
+        <ul class="auth-highlights">
+          <li>Secure OAuth 2.0 flow handled by Google.</li>
+          <li>One-tap access on devices where you are already signed in.</li>
+          <li>Easy to revoke access from your Google account at any time.</li>
+        </ul>
+      </div>
+      <div class="col-lg-5 ms-lg-auto">
+        <div class="card shadow-sm border-0 auth-panel">
+          <div class="card-body p-4 p-lg-5">
+            <div class="text-center mb-4">
+              <span class="badge rounded-pill bg-light text-primary mb-2">Google sign-in</span>
+              <p class="mb-0 text-muted">
+                Confirm below to be redirected to Google and finish signing in.
+              </p>
+            </div>
+            <form method="post" class="auth-form">
+              {% csrf_token %}
+              {{ form.as_p }}
+              <button type="submit" class="btn btn-outline-dark w-100 oauth-button">
+                <span class="oauth-icon">G</span>
+                Continue to Google
+              </button>
+            </form>
+            <p class="text-center text-muted small mb-0 mt-3">
+              Prefer not to use Google? <a href="{% url 'log_in' %}">Sign in with username and password instead.</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+
