@@ -16,7 +16,6 @@ class RecipeForm(forms.ModelForm):
             "prep_time_minutes",
             "cook_time_minutes",
             "servings",
-            "is_published",
         ]
         widgets = {
             "ingredients": forms.Textarea(attrs={"rows": 5}),
