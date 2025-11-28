@@ -6,7 +6,7 @@
       <thead>
         <tr>
           <th scope="col" style="width: 80%">Recipe Title</th>
-          <th scope="col" style="width: 20%">Actions</th>
+          <th scope="col" style="width: 20%; text-align: center;">Favourite</th>
         </tr>
       </thead>
       <tbody>
@@ -26,16 +26,16 @@
               </div>
             </div>
           </td>
-          <td>
+          <td class="text-center">
             <form method="post" action="" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
               <input type="hidden" name="action" value="toggle">
               
               {% with is_saved=recipe.id|is_recipe_saved:saved_recipe_ids %}
-              <button type="submit" class="btn btn-link p-0 heart-icon {% if is_saved %}saved{% endif %}" 
-                      title="{% if is_saved %}Remove from saved{% else %}Save recipe{% endif %}">
-                <i class="bi {% if is_saved %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+              <button type="submit" class="btn btn-link p-0" 
+                      title="{% if is_saved %}Remove from favourites{% else %}Add to favourites{% endif %}">
+                <i class="bi {% if is_saved %}bi-star-fill{% else %}bi-star{% endif %}" style="color: #ffc107; font-size: 1.25rem;"></i>
               </button>
               {% endwith %}
             </form>

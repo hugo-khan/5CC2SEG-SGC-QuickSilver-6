@@ -49,8 +49,8 @@
       </div>
 
       {# --- Like button from the comment/like feature --- #}
-      <div class="mt-3">
-        <form method="post" action="{% url 'toggle_like' recipe.id %}" class="mt-2 mb-3">
+      <div class="mt-3 d-flex gap-2 flex-wrap">
+        <form method="post" action="{% url 'toggle_like' recipe.id %}">
           {% csrf_token %}
           {% if user.is_authenticated %}
             {% if has_liked %}
@@ -68,6 +68,26 @@
             </a>
           {% endif %}
         </form>
+
+        {# --- Favourite button --- #}
+        {% if user.is_authenticated %}
+          <form method="post" action="{% url 'toggle_save_recipe' recipe.pk %}">
+            {% csrf_token %}
+            {% if is_favourited %}
+              <button type="submit" class="btn btn-warning">
+                ⭐ Remove from Favourites
+              </button>
+            {% else %}
+              <button type="submit" class="btn btn-outline-warning">
+                ☆ Add to Favourites
+              </button>
+            {% endif %}
+          </form>
+        {% else %}
+          <a href="{% url 'log_in' %}" class="btn btn-outline-secondary">
+            ☆ Add to Favourites (Login Required)
+          </a>
+        {% endif %}
       </div>
 
       {# --- Comments list and modal from the other branch --- #}

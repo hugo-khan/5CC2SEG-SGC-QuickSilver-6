@@ -6,7 +6,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from recipes.forms import RecipeForm, CommentForm
-from recipes.models import Comment, Follow, Recipe, User
+from recipes.models import Comment, Follow, Recipe, SavedRecipe, User
 
 
 class RecipeListView(ListView):
@@ -54,6 +54,12 @@ class RecipeDetailView(DetailView):
         context["total_likes"] = recipe.likes.count()
         context["has_liked"] = (
             user.is_authenticated and recipe.likes.filter(pk=user.pk).exists()
+        )
+
+        # Favourite feature: check if recipe is saved by current user
+        context["is_favourited"] = (
+            user.is_authenticated
+            and SavedRecipe.objects.filter(user=user, recipe=recipe).exists()
         )
 
         return context
@@ -178,4 +184,24 @@ def unfollow_user(request, user_id):
     Follow.objects.filter(follower=request.user, followed=target).delete()
     messages.info(request, f"You unfollowed {target.username}.")
     return redirect(request.META.get("HTTP_REFERER", reverse_lazy("feed")))
+
+
+@login_required
+def toggle_save_recipe(request, pk):
+    """Toggle save/unsave a recipe (favourite). POST-only, redirects back to recipe detail."""
+
+    recipe = get_object_or_404(Recipe, pk=pk)
+
+    if request.method == "POST":
+        saved_recipe, created = SavedRecipe.objects.get_or_create(
+            user=request.user,
+            recipe=recipe,
+        )
+        if not created:
+            saved_recipe.delete()
+            messages.info(request, f"Removed '{recipe.title}' from favourites.")
+        else:
+            messages.success(request, f"Added '{recipe.title}' to favourites.")
+
+    return redirect("recipe_detail", pk=pk)
 

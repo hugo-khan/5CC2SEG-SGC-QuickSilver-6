@@ -27,7 +27,7 @@ def profile(request):
         return redirect('profile')
     
     # Normal GET request
-    saved_recipes = current_user.saved_recipes.all().select_related('recipe', 'recipe__created_by')
+    saved_recipes = current_user.saved_recipes.all().select_related('recipe', 'recipe__author')
     saved_recipe_ids = saved_recipes.values_list('recipe_id', flat=True)
     
     return render(request, 'profile.html', {
