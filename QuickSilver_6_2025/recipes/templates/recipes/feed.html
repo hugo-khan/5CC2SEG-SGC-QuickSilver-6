@@ -11,57 +11,10 @@
   </div>
 
   {% if recipes %}
-    <div class="list-group">
-      {% for recipe in recipes %}
-        <div class="list-group-item">
-          <a class="stretched-link text-decoration-none text-reset" href="{% url 'recipe_detail' recipe.pk %}">
-            <div class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1">{{ recipe.title }}</h5>
-              <small>{{ recipe.created_at|date:"j M Y" }}</small>
-            </div>
-            <p class="mb-1 text-muted">By {{ recipe.author.username }}</p>
-            {% if recipe.summary %}
-              <p class="mb-1">{{ recipe.summary }}</p>
-            {% endif %}
-          </a>
-
-          {# Inline preview of top 3 comments and like button from the other branch #}
-          {% if comments and comments|get_item:recipe.id %}
-            {% with recipe_comments=comments|get_item:recipe.id %}
-              {% for comment in recipe_comments %}
-                <div class="border p-2 mb-2 rounded mt-2">
-                  <strong>{{ comment.user.username }}</strong>
-                  <small class="text-muted ms-2">{{ comment.created_at|date:"F j, g:i a" }}</small>
-                  <p class="mb-0">{{ comment.text }}</p>
-
-                  <form method="post" action="{% url 'toggle_like' recipe.id %}" class="mt-2">
-                    {% csrf_token %}
-                    {% if user.is_authenticated %}
-                      {% if user in recipe.likes.all %}
-                        <button type="submit" class="btn btn-sm btn-danger">
-                          💔 Unlike
-                        </button>
-                      {% else %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                          ❤️ Like
-                        </button>
-                      {% endif %}
-                    {% else %}
-                      <a href="{% url 'log_in' %}" class="btn btn-sm btn-outline-secondary">
-                        ❤️ Like (Login Required)
-                      </a>
-                    {% endif %}
-                  </form>
-                </div>
-              {% endfor %}
-            {% endwith %}
-
-            <a href="{% url 'recipe_detail' recipe.id %}" class="small d-block mt-1">
-              View all comments →
-            </a>
-          {% endif %}
-        </div>
-      {% endfor %}
+    <div class="recipe-card">
+      <div class="card-body p-0">
+        {% include 'partials/profile_tabs/recipe_table.html' with recipes=recipes saved_recipe_ids=saved_recipe_ids %}
+      </div>
     </div>
     {% include 'partials/pagination.html' %}
   {% else %}
