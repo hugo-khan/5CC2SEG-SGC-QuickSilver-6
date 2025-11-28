@@ -18,7 +18,7 @@ class HomeViewTestCase(TestCase):
     def test_get_home(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'home.html')
+        self.assertTemplateUsed(response, 'log_in.html')
 
     def test_get_home_redirects_when_logged_in(self):
         self.client.login(username=self.user.username, password="Password123")

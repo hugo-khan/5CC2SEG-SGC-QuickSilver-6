@@ -23,7 +23,6 @@ from recipes.views.author_recipes_view import author_recipes
 from recipes.views.comment_view import AddCommentView
 from recipes.views.dashboard_view import dashboard
 from recipes.views.edit_profile_view import ProfileUpdateView  # Edit profile
-from recipes.views.home_view import home
 from recipes.views.like_view import ToggleLikeView
 from recipes.views.log_in_view import LogInView
 from recipes.views.log_out_view import log_out
@@ -36,7 +35,7 @@ from recipes.views.sign_up_view import SignUpView
 urlpatterns = [
     # Core pages
     path("admin/", admin.site.urls),
-    path("", home, name="home"),
+    path("", LogInView.as_view(), name="home"),
     path("dashboard/", dashboard, name="dashboard"),
 
     # Auth & profile

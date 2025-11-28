@@ -65,3 +65,17 @@ def map_key(items, key_name):
         return [item.get(key_name) for item in items]
     except (AttributeError, TypeError):
         return []
+
+
+@register.filter
+def get_item(dictionary, key):
+    """
+    Look up a value from a dictionary by key.
+    Usage: {{ my_dict|get_item:key_variable }}
+    """
+    if dictionary is None:
+        return None
+    try:
+        return dictionary.get(key)
+    except (AttributeError, TypeError):
+        return None
