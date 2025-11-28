@@ -5,8 +5,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.urls import reverse
 from recipes.forms import PasswordForm
+from django.utils.decorators import method_decorator # New Import
+from django.views.decorators.cache import never_cache # New Import
 
 
+@method_decorator(never_cache, name='dispatch')
 class PasswordView(LoginRequiredMixin, FormView):
     """
     Allow authenticated users to change their password.
