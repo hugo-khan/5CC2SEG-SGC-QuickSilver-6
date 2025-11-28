@@ -6,6 +6,13 @@ from recipes.models import Recipe, SavedRecipe
 
 @login_required
 def dashboard(request):
+    """Display welcome page for logged-in users."""
+    return render(request, "dashboard_welcome.html", {"user": request.user})
+
+
+@login_required
+def browse_recipes(request):
+    """Display all recipes with favourite toggle functionality."""
     current_user = request.user
 
     # Handle favourite toggle
@@ -21,7 +28,7 @@ def dashboard(request):
                 saved_recipe.delete()
         except Recipe.DoesNotExist:
             pass
-        return redirect("dashboard")  # Refresh the page
+        return redirect("recipe_list")  # Refresh the page
 
     # Normal GET request: show all recipes with saved-state information
     recipes = Recipe.objects.all().select_related("author")
