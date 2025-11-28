@@ -1,0 +1,48 @@
+{% extends 'base_content.html' %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 text-center">
+      <h1 class="display-4 mb-3">Welcome, {{ user.first_name }}!</h1>
+      <p class="lead text-muted mb-5">What would you like to do today?</p>
+      
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <i class="bi bi-collection" style="font-size: 2.5rem; color: #0d6efd;"></i>
+              <h5 class="card-title mt-3">Browse Recipes</h5>
+              <p class="card-text text-muted">Explore all recipes and save your favourites.</p>
+              <a href="{% url 'recipe_list' %}" class="btn btn-primary">Browse</a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <i class="bi bi-rss" style="font-size: 2.5rem; color: #198754;"></i>
+              <h5 class="card-title mt-3">Your Feed</h5>
+              <p class="card-text text-muted">See recipes from authors you follow.</p>
+              <a href="{% url 'feed' %}" class="btn btn-success">View Feed</a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <i class="bi bi-person-circle" style="font-size: 2.5rem; color: #6c757d;"></i>
+              <h5 class="card-title mt-3">Your Profile</h5>
+              <p class="card-text text-muted">View your profile and saved recipes.</p>
+              <a href="{% url 'profile' %}" class="btn btn-secondary">Profile</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
