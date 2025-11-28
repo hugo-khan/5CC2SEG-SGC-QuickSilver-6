@@ -13,25 +13,24 @@
         {% for recipe in recipes %}
         <tr>
           <td>
-            <div class="d-flex align-items-center">
-              <div class="flex-grow-1">
-                <h6 class="mb-0">{{ recipe.title }}</h6>
-                <small class="text-muted">
-                  By {{ recipe.created_by.username }} • 
-                  {{ recipe.cooking_time|format_cooking_time }} • 
-                  <span class="badge difficulty-badge {{ recipe.difficulty|get_difficulty_class }}">
-                    {{ recipe.difficulty|title }}
-                  </span>
-                </small>
+            <a href="{% url 'recipe_detail' recipe.pk %}" class="text-decoration-none text-reset d-block">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">{{ recipe.title }}</h6>
+                  <small class="text-muted">
+                    By {{ recipe.created_by.username }} • 
+                    {{ recipe.cooking_time|format_cooking_time }} • 
+                    <span class="badge difficulty-badge {{ recipe.difficulty|get_difficulty_class }}">
+                      {{ recipe.difficulty|title }}
+                    </span>
+                  </small>
+                </div>
               </div>
-            </div>
+            </a>
           </td>
           <td class="text-center">
-            <form method="post" action="" class="d-inline">
+            <form method="post" action="{% url 'toggle_save_recipe' recipe.pk %}" class="d-inline">
               {% csrf_token %}
-              <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
-              <input type="hidden" name="action" value="toggle">
-              
               {% with is_saved=recipe.id|is_recipe_saved:saved_recipe_ids %}
               <button type="submit" class="btn btn-link p-0" 
                       title="{% if is_saved %}Remove from favourites{% else %}Add to favourites{% endif %}">

@@ -146,6 +146,12 @@ class FeedView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["has_followed_users"] = self.request.user.following.exists()
 
+        # Add saved_recipe_ids for favourite state display
+        saved_recipe_ids = SavedRecipe.objects.filter(
+            user=self.request.user
+        ).values_list("recipe_id", flat=True)
+        context["saved_recipe_ids"] = list(saved_recipe_ids)
+
         recipes = context.get("object_list", [])
         comments_by_recipe = {}
 
@@ -188,7 +194,7 @@ def unfollow_user(request, user_id):
 
 @login_required
 def toggle_save_recipe(request, pk):
-    """Toggle save/unsave a recipe (favourite). POST-only, redirects back to recipe detail."""
+    """Toggle save/unsave a recipe (favourite). POST-only, redirects back to referring page."""
 
     recipe = get_object_or_404(Recipe, pk=pk)
 
@@ -203,5 +209,9 @@ def toggle_save_recipe(request, pk):
         else:
             messages.success(request, f"Added '{recipe.title}' to favourites.")
 
+    # Redirect back to referring page, or recipe detail as fallback
+    referer = request.META.get("HTTP_REFERER")
+    if referer:
+        return redirect(referer)
     return redirect("recipe_detail", pk=pk)
 
