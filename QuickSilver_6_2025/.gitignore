@@ -27,4 +27,3 @@ db.sqlite3
 # ------------------------------------
 # Local settings files (where you store secrets/credentials)
 local_settings.py
-.env
