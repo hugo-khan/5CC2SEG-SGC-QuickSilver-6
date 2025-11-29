@@ -1,16 +1,19 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.views.decorators.cache import never_cache
 
 from recipes.models import Recipe, SavedRecipe
 
 
 @login_required
+@never_cache
 def dashboard(request):
     """Display welcome page for logged-in users."""
     return render(request, "dashboard_welcome.html", {"user": request.user})
 
 
 @login_required
+@never_cache
 def browse_recipes(request):
     """Display all recipes with favourite toggle functionality."""
     current_user = request.user

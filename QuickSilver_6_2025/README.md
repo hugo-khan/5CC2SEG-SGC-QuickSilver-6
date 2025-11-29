@@ -47,6 +47,17 @@ Run all tests with:
 $ python3 manage.py test
 ```
 
+### Google OAuth set-up
+
+1. Create OAuth 2.0 credentials in the Google Cloud Console (Web application) and add the callback `http://localhost:8000/accounts/google/login/callback/`.
+2. Export the credentials before starting Django:
+   ```
+   export GOOGLE_CLIENT_ID=<client-id>
+   export GOOGLE_CLIENT_SECRET=<client-secret>
+   ```
+3. Ensure the default `Site` entry (ID 1) matches your development domain (`example.com` is fine locally). Update it via the Django admin if you deploy under a different host.
+4. Restart the server. The “Continue with Google” option on the login screen appears automatically once both variables are present.
+
 *The above instructions should work in your version of the application.  If there are deviations, declare those here in bold.  Otherwise, remove this line.*
 
 ## Sources

@@ -22,6 +22,7 @@ from django.urls import include, path
 from recipes.views.author_recipes_view import author_recipes
 from recipes.views.comment_view import AddCommentView
 from recipes.views.dashboard_view import dashboard
+from recipes.views.delete_account_view import DeleteAccountView
 from recipes.views.edit_profile_view import ProfileUpdateView  # Edit profile
 from recipes.views.like_view import ToggleLikeView
 from recipes.views.log_in_view import LogInView
@@ -49,6 +50,10 @@ urlpatterns = [
         name="profile_edit",
     ),  # Edit profile
     path("sign_up/", SignUpView.as_view(), name="sign_up"),
+    path("account/delete/", DeleteAccountView.as_view(), name="delete_account"),
+
+    # Google OAuth via allauth
+    path("accounts/", include("allauth.urls")),
 
     # Recipe-related features (search, author listing, comments, likes)
     path("recipes/search/", recipe_search, name="recipe_search"),

@@ -1,11 +1,15 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView
 from django.urls import reverse
 from recipes.forms import PasswordForm
+from django.utils.decorators import method_decorator # New Import
+from django.views.decorators.cache import never_cache # New Import
 
 
+@method_decorator(never_cache, name='dispatch')
 class PasswordView(LoginRequiredMixin, FormView):
     """
     Allow authenticated users to change their password.
@@ -41,7 +45,7 @@ class PasswordView(LoginRequiredMixin, FormView):
         """
 
         form.save()
-        login(self.request, self.request.user)
+        login(self.request, self.request.user, backend=settings.AUTHENTICATION_BACKENDS[0])
         return super().form_valid(form)
 
     def get_success_url(self):
