@@ -1,15 +1,58 @@
 {% extends 'base_content.html' %}
 {% block content %}
-<div class="container">
-  <div class="row">
-    <div class="col-12">
-      <h1>Sign up</h1>
-      <form action="{% url 'sign_up' %}" method="post">
-        {% csrf_token %}
-        {% include 'partials/bootstrap_form.html' with form=form %}
-        <input type="submit" value="Sign up" class="btn btn-primary">
-      </form>
+<section class="auth-shell py-5">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-6">
+        <p class="eyebrow text-uppercase fw-semibold mb-2">Create workspace</p>
+        <h1 class="display-5 fw-bold mb-4">Start with a focused, chef-friendly toolkit.</h1>
+        <p class="lead text-muted mb-4">
+          Answer a few simple questions and unlock collaborative recipe notebooks,
+          tasting history, and pantry insights tailored for your crew.
+        </p>
+        <div class="signup-perks">
+          <div>
+            <span class="perk-count">01</span>
+            <p>Invite collaborators instantly—no extra onboarding needed.</p>
+          </div>
+          <div>
+            <span class="perk-count">02</span>
+            <p>Keep dietary tags, allergens, and vendor notes close to every draft.</p>
+          </div>
+          <div>
+            <span class="perk-count">03</span>
+            <p>Secure login with email + password today, or Google when configured.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5 ms-lg-auto">
+        <div class="card shadow-sm border-0 auth-panel">
+          <div class="card-body p-4 p-lg-5">
+            <div class="text-center mb-4">
+              <span class="badge rounded-pill bg-light text-primary mb-2">Sign up</span>
+              <p class="mb-0 text-muted">All fields are required to keep your data accurate.</p>
+            </div>
+            <form action="{% url 'sign_up' %}" method="post" class="auth-form">
+              {% csrf_token %}
+              {% include 'partials/bootstrap_form.html' with form=form %}
+              <button type="submit" class="btn btn-primary w-100 mb-3">Create account</button>
+            </form>
+            {% if google_login_enabled and google_login_url %}
+            <div class="divider text-center my-4">
+              <span>or</span>
+            </div>
+            <a href="{{ google_login_url }}" class="btn btn-outline-dark w-100 oauth-button">
+              <span class="oauth-icon">G</span>
+              Sign up with Google
+            </a>
+            {% endif %}
+            <p class="text-center text-muted small mb-0">
+              Already have an account? <a href="{% url 'log_in' %}">Log in instead.</a>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</section>
 {% endblock %}

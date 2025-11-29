@@ -2,7 +2,9 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.shortcuts import redirect, render
+from django.urls import NoReverseMatch, reverse
 from django.views import View
+from urllib.parse import urlencode
 from recipes.forms import LogInForm
 from recipes.views.decorators import LoginProhibitedMixin
 
@@ -51,4 +53,26 @@ class LogInView(LoginProhibitedMixin, View):
         """
 
         form = LogInForm()
-        return render(self.request, 'log_in.html', {'form': form, 'next': self.next})
+        context = {
+            'form': form,
+            'next': self.next,
+            'google_login_enabled': getattr(settings, 'GOOGLE_OAUTH_ENABLED', False),
+            'google_login_url': self._google_login_url(),
+        }
+        return render(self.request, 'log_in.html', context)
+
+    def _google_login_url(self):
+        """
+        Build the Google OAuth entry point if the provider is configured.
+        """
+
+        if not getattr(settings, 'GOOGLE_OAUTH_ENABLED', False):
+            return None
+        try:
+            base_url = reverse('google_login')
+        except NoReverseMatch:
+            return None
+        params = {'process': 'login'}
+        if self.next:
+            params['next'] = self.next
+        return f'{base_url}?{urlencode(params)}'

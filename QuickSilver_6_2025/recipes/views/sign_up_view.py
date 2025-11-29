@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.contrib.auth import login
 from django.views.generic.edit import FormView
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
+from urllib.parse import urlencode
 from recipes.forms import SignUpForm
 from recipes.views.decorators import LoginProhibitedMixin
 
@@ -29,7 +30,7 @@ class SignUpView(LoginProhibitedMixin, FormView):
         `get_success_url()`.
         """
         self.object = form.save()
-        login(self.request, self.object)
+        login(self.request, self.object, backend=settings.AUTHENTICATION_BACKENDS[0])
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -37,3 +38,22 @@ class SignUpView(LoginProhibitedMixin, FormView):
         Determine the redirect URL after successful registration.
         """
         return reverse(settings.REDIRECT_URL_WHEN_LOGGED_IN)
+
+    def get_context_data(self, **kwargs):
+        """
+        Add Google OAuth configuration to the signup context when available.
+        """
+
+        context = super().get_context_data(**kwargs)
+        enabled = getattr(settings, 'GOOGLE_OAUTH_ENABLED', False)
+        context['google_login_enabled'] = False
+        context['google_login_url'] = None
+        if enabled:
+            try:
+                base_url = reverse('google_login')
+            except NoReverseMatch:
+                return context
+            params = {'process': 'login'}
+            context['google_login_url'] = f'{base_url}?{urlencode(params)}'
+            context['google_login_enabled'] = True
+        return context
