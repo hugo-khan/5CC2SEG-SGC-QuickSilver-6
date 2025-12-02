@@ -1,19 +1,16 @@
-# recipes/adapters.py
-
 import string
 import secrets
-# The problematic import has been removed: from allauth.account.utils import get_username_max_length
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.utils import generate_unique_username
 from django.contrib.auth import get_user_model
 
-# Get your custom User model
 User = get_user_model()
+
 
 class RecipeAccountAdapter(DefaultAccountAdapter):
     """
     Custom adapter that manually generates a unique username conforming to 
-    the custom '@\w{3,}' regex and ensures a unique username is created.
+    the custom '@\\w{3,}' regex and ensures a unique username is created.
     """
     
     def populate_username(self, request, user):
@@ -27,7 +24,7 @@ class RecipeAccountAdapter(DefaultAccountAdapter):
         # 2. Sanitize to only keep valid word characters
         sanitized_base = ''.join(c for c in email_local_part if c.isalnum() or c == '_')
         
-        # 3. Ensure the base name is long enough for the @\w{3,} regex
+        # 3. Ensure the base name is long enough for the @\\w{3,} regex
         if len(sanitized_base) < 3:
              sanitized_base = 'user'
              
@@ -81,3 +78,4 @@ class RecipeAccountAdapter(DefaultAccountAdapter):
                 # Fallback to generating a purely random, valid username
                 random_suffix = ''.join(secrets.choice(string.ascii_letters + string.digits) for j in range(max_len - 1))
                 return '@' + random_suffix[:max_len-1]
+

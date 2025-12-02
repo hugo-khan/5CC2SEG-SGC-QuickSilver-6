@@ -1,10 +1,47 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
-from django.views.decorators.cache import never_cache # New Import
+from django.views.decorators.cache import never_cache
+
+from recipes.models import Recipe, SavedRecipe
 
 
 @login_required
-@never_cache # Apply anti-caching decorator
+@never_cache
 def dashboard(request):
     """Display welcome page for logged-in users."""
-    return render(request, "dashboard.html", {"user": request.user})
+    return render(request, "dashboard_welcome.html", {"user": request.user})
+
+
+@login_required
+@never_cache
+def browse_recipes(request):
+    """Display all recipes with favourite toggle functionality."""
+    current_user = request.user
+
+    # Handle favourite toggle
+    if request.method == "POST" and "recipe_id" in request.POST:
+        recipe_id = request.POST["recipe_id"]
+        try:
+            recipe = Recipe.objects.get(id=recipe_id)
+            saved_recipe, created = SavedRecipe.objects.get_or_create(
+                user=current_user,
+                recipe=recipe,
+            )
+            if not created:
+                saved_recipe.delete()
+        except Recipe.DoesNotExist:
+            pass
+        return redirect("recipe_list")  # Refresh the page
+
+    # Normal GET request: show all recipes with saved-state information
+    recipes = Recipe.objects.all().select_related("author")
+    saved_recipe_ids = SavedRecipe.objects.filter(user=current_user).values_list(
+        "recipe_id", flat=True
+    )
+
+    context = {
+        "user": current_user,
+        "recipes": recipes,
+        "saved_recipe_ids": list(saved_recipe_ids),
+    }
+    return render(request, "dashboard.html", context)

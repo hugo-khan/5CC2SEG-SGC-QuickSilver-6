@@ -1,0 +1,31 @@
+{% extends 'base_content.html' %}
+{% load recipe_helpers %}
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1>Your feed</h1>
+      <p class="text-muted mb-0">Recipes from authors you follow.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'recipe_list' %}">Browse all recipes</a>
+  </div>
+
+  {% if recipes %}
+    <div class="recipe-card">
+      <div class="card-body p-0">
+        {% include 'partials/profile_tabs/recipe_table.html' with recipes=recipes saved_recipe_ids=saved_recipe_ids %}
+      </div>
+    </div>
+    {% include 'partials/pagination.html' %}
+  {% else %}
+    <div class="alert alert-info">
+      {% if has_followed_users %}
+        None of the people you follow have published recipes yet.
+      {% else %}
+        You are not following anyone yet. Explore recipes and follow authors to build your feed.
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
