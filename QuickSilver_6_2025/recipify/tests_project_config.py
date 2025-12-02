@@ -208,3 +208,6 @@ class TestProjectURLs(DjangoTestCase):
         
         # Clean up module cache
         del sys.modules['recipify.urls']
+
+
+        #Push check
