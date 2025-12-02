@@ -1,16 +1,21 @@
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
-  <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-    <li class="nav-item dropdown">
-      <a class="nav-link" href="#" id="user-account-dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        <span class="bi-person-circle"></span>
+  <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'feed' %}">Feed</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'recipe_list' %}">Browse</a>
+    </li>
+    <li class="nav-item">
+      <a class="btn btn-sm btn-outline-light ms-lg-3" href="{% url 'recipe_create' %}">Publish recipe</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'profile' %}">
+        <span class="bi-person-circle"></span> Profile
       </a>
-      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="user-account-dropdown">
-        <li><a class="dropdown-item" href="{% url 'profile' %}">Change profile</a></li>
-        <li><a class="dropdown-item" href="{% url 'password' %}">Change password</a></li>
-        <li><a class="dropdown-item text-danger" href="{% url 'delete_account' %}">Delete account</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="{% url 'log_out' %}">Log out</a></li>
-      </ul>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="{% url 'log_out' %}">Log out</a>
     </li>
   </ul>
 </div>

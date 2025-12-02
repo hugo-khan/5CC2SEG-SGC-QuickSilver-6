@@ -1,0 +1,20 @@
+{% extends 'base_content.html' %}
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-lg-8">
+      <h1 class="mb-4">{{ page_title }}</h1>
+      <form method="post">
+        {% csrf_token %}
+        {% include 'partials/bootstrap_form.html' with form=form %}
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+          <a href="{% if object %}{% url 'recipe_detail' object.pk %}{% else %}{% url 'recipe_list' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

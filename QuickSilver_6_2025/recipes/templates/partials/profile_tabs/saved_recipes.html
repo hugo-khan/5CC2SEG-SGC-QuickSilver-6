@@ -1,0 +1,22 @@
+{% load recipe_helpers %}
+
+<div class="recipe-card">
+  <div class="card-header">
+    <h5 class="mb-0"><i class="bi bi-bookmark-heart me-2"></i>Saved Recipes</h5>
+  </div>
+  <div class="card-body p-0">
+    {% if saved_recipes_prefetched %}
+      <form method="post">  
+        {% csrf_token %}
+        {% with recipe_list=saved_recipes_prefetched|map_attribute:"recipe" %}
+          {% include 'partials/profile_tabs/recipe_table.html' with recipes=recipe_list saved_recipe_ids=saved_recipe_ids %}
+        {% endwith %}
+      </form>
+    {% else %}
+      <div class="empty-state text-center py-5">
+        <i class="bi bi-bookmark-heart" style="font-size: 3rem; color: #6c757d;"></i>
+        <p class="text-muted mt-3 mb-0">You have no favourited recipes.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>

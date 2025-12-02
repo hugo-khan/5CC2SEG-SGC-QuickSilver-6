@@ -3,10 +3,11 @@ from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic.edit import FormView
-from django.utils.decorators import method_decorator # New Import
-from django.views.decorators.cache import never_cache # New Import
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 
 from recipes.forms import DeleteAccountForm
+
 
 @method_decorator(never_cache, name='dispatch')
 class DeleteAccountView(LoginRequiredMixin, FormView):

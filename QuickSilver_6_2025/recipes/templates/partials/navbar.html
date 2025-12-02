@@ -8,6 +8,11 @@
     </button>
     {% if user.is_authenticated %}
       {% include 'partials/menu.html' %}
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'recipe_search' %}">🔍 Search Recipes</a>
+        </li>
+      </ul>
     {% endif %}
   </div>
 </nav>

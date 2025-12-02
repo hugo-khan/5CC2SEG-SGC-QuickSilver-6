@@ -5,4 +5,6 @@ from .log_out_view import *
 from .password_view import *
 from .profile_view import *
 from .sign_up_view import *
+from .recipe_views import *
 from .delete_account_view import *
+

@@ -1,57 +1,48 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from recipes.models import Follow, Recipe, User
 
-from recipes.models import User
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    """
+    Admin for Recipe that exposes both the original timing/difficulty fields
+    and the newer dietary/popularity fields so all features remain usable.
+    """
+
+    # Combine fields from both versions of Recipe
+    list_display = (
+        "title",  # original
+        "author",
+        "dietary_requirement",  # newer
+        "popularity",  # newer
+        "created_at",  # original timestamp
+        "is_published",  # original
+    )
+    list_filter = (
+        "dietary_requirement",
+        "created_at",
+        "popularity",
+        "is_published",
+        "difficulty",
+    )
+    search_fields = (
+        "title",
+        "summary",
+        "description",
+        "author__username",
+    )
+    readonly_fields = ("date_posted", "created_at", "updated_at")
+    autocomplete_fields = ("author",)
+
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ("follower", "followed", "created_at")
+    search_fields = ("follower__username", "followed__username")
+    autocomplete_fields = ("follower", "followed")
 
 
 @admin.register(User)
-class CustomUserAdmin(UserAdmin):
-    """Expose the custom User model in the Django admin site."""
-
-    list_display = (
-        'username',
-        'email',
-        'first_name',
-        'last_name',
-        'is_staff',
-        'is_active',
-    )
-    list_filter = ('is_staff', 'is_superuser', 'is_active')
-    search_fields = ('username', 'first_name', 'last_name', 'email')
-    ordering = ('username',)
-
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email')}),
-        (
-            'Permissions',
-            {
-                'fields': (
-                    'is_active',
-                    'is_staff',
-                    'is_superuser',
-                    'groups',
-                    'user_permissions',
-                )
-            },
-        ),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
-    add_fieldsets = (
-        (
-            None,
-            {
-                'classes': ('wide',),
-                'fields': (
-                    'username',
-                    'first_name',
-                    'last_name',
-                    'email',
-                    'password1',
-                    'password2',
-                    'is_active',
-                    'is_staff',
-                ),
-            },
-        ),
-    )
+class UserAdmin(admin.ModelAdmin):
+    list_display = ("username", "email", "first_name", "last_name")
+    search_fields = ("username", "email", "first_name", "last_name")
