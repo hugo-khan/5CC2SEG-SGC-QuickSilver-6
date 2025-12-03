@@ -1,26 +1,28 @@
-from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth import get_user_model  # Updated import
-from recipes.models import Recipe
+from django.core.management.base import BaseCommand
+from django.contrib.auth import get_user_model
 
-# Get the custom User model
+from recipes.models.recipe import Recipe
+from recipes.models.like import Like
+from recipes.models.saved_recipes import SavedRecipe
+from recipes.models.comment import Comment
+from recipes.models.follow import Follow
+from recipes.models.tag import Tag
+
 User = get_user_model()
 
+
 class Command(BaseCommand):
-    """
-    Management command to remove (unseed) user and recipe data from the database.
-    """
-    
-    help = 'Removes seeded data from the database'
+    help = "Clear ALL seeded data (users, recipes, tags, interactions)."
 
     def handle(self, *args, **options):
-        # Delete all recipes first (to maintain foreign key constraints)
-        recipe_count, _ = Recipe.objects.all().delete()
-        
-        # Delete all non-staff users
-        user_count, _ = User.objects.filter(is_staff=False).delete()
-        
-        self.stdout.write(
-            self.style.SUCCESS(
-                f'Unseeding complete! Deleted {recipe_count} recipes and {user_count} users.'
-            )
-        )
+        self.stdout.write("Unseeding...")
+
+        Comment.objects.all().delete()
+        Like.objects.all().delete()
+        SavedRecipe.objects.all().delete()
+        Follow.objects.all().delete()
+        Recipe.objects.all().delete()
+        Tag.objects.all().delete()
+        User.objects.filter(is_staff=False, is_superuser=False).delete()
+
+        self.stdout.write(self.style.SUCCESS("Database unseeded."))
