@@ -1,4 +1,4 @@
-# Team *enter team name here* Small Group project
+QUICKSILVER-6 Team Project
 
 ## Team members
 The members of the team are:
