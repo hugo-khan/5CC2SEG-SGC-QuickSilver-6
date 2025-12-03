@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -66,6 +68,9 @@ class Recipe(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Sharing
+    share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+
     class Meta:
         ordering = ["-created_at", "-date_posted"]
 
@@ -95,6 +100,15 @@ class Recipe(models.Model):
         Backwards-compatible alias for code that expects `created_by`.
         """
         return self.author
+
+    def get_share_url(self, request):
+        """
+        Generate a shareable URL for this recipe.
+        """
+        from django.urls import reverse
+        return request.build_absolute_uri(
+            reverse('recipe_share', kwargs={'share_token': self.share_token})
+        )
 
     # Users who liked this recipe.
     # We keep the ManyToMany interface expected by the like feature/tests,

@@ -62,6 +62,9 @@ class RecipeDetailView(DetailView):
             and SavedRecipe.objects.filter(user=user, recipe=recipe).exists()
         )
 
+        # Share feature: generate share URL
+        context["share_url"] = recipe.get_share_url(self.request)
+
         return context
 
 
