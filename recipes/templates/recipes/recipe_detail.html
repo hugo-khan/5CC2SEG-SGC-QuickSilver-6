@@ -48,8 +48,16 @@
         </ul>
       </div>
 
-      {# --- Like button from the comment/like feature --- #}
+      {# --- Share button --- #}
       <div class="mt-3 d-flex gap-2 flex-wrap">
+        <button type="button" class="btn btn-outline-primary" onclick="shareRecipe()" id="shareButton">
+          📤 Share Recipe
+        </button>
+        <button type="button" class="btn btn-outline-secondary" onclick="copyShareLink()" id="copyButton">
+          📋 Copy Link
+        </button>
+
+      {# --- Like button from the comment/like feature --- #}
         <form method="post" action="{% url 'toggle_like' recipe.id %}">
           {% csrf_token %}
           {% if user.is_authenticated %}
@@ -137,4 +145,58 @@
     </div>
   </div>
 </div>
+
+<script>
+  const shareUrl = "{{ share_url }}";
+  const recipeTitle = "{{ recipe.title }}";
+  const recipeSummary = "{{ recipe.summary|default:recipe.title }}";
+
+  // Native Web Share API (works on mobile devices)
+  async function shareRecipe() {
+    const shareData = {
+      title: recipeTitle,
+      text: recipeSummary,
+      url: shareUrl
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: copy to clipboard
+        copyShareLink();
+      }
+    } catch (err) {
+      // User cancelled or error occurred
+      if (err.name !== 'AbortError') {
+        copyShareLink();
+      }
+    }
+  }
+
+  // Copy link to clipboard
+  function copyShareLink() {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      const button = document.getElementById('copyButton');
+      const originalText = button.innerHTML;
+      button.innerHTML = '✓ Copied!';
+      button.classList.remove('btn-outline-secondary');
+      button.classList.add('btn-success');
+      setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+      }, 2000);
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Link copied to clipboard!');
+    });
+  }
+</script>
 {% endblock %}

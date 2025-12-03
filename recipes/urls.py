@@ -5,6 +5,7 @@ from recipes.views import (
     RecipeCreateView,
     RecipeDetailView,
     RecipeUpdateView,
+    RecipeShareView,
     follow_user,
     unfollow_user,
 )
@@ -17,6 +18,7 @@ urlpatterns = [
     path("recipes/<int:pk>/", RecipeDetailView.as_view(), name="recipe_detail"),
     path("recipes/<int:pk>/edit/", RecipeUpdateView.as_view(), name="recipe_edit"),
     path("recipes/<int:pk>/save/", toggle_save_recipe, name="toggle_save_recipe"),
+    path("share/<uuid:share_token>/", RecipeShareView.as_view(), name="recipe_share"),
     path("feed/", FeedView.as_view(), name="feed"),
     path("follow/<int:user_id>/", follow_user, name="follow_user"),
     path("unfollow/<int:user_id>/", unfollow_user, name="unfollow_user"),
