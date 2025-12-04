@@ -71,3 +71,67 @@ class DeleteAccountViewTestCase(TestCase, LogInTester):
         self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
         self.assertTrue(User.objects.filter(username='@johndoe').exists())
 
+    def test_delete_account_for_oauth_user(self):
+        """Test that OAuth users can delete account without password."""
+        # Create user without password (OAuth user)
+        oauth_user = User.objects.create_user(
+            username='@oauthuser',
+            email='oauth@example.com',
+            first_name='OAuth',
+            last_name='User'
+        )
+        oauth_user.set_unusable_password()
+        oauth_user.save()
+        
+        # Create social account
+        try:
+            from allauth.socialaccount.models import SocialAccount
+            SocialAccount.objects.create(
+                user=oauth_user,
+                provider='google',
+                uid='123456789',
+                extra_data={}
+            )
+        except ImportError:
+            pass
+        
+        self.client.login(username='@oauthuser', password='')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('is_oauth_user', response.context)
+        self.assertTrue(response.context['is_oauth_user'])
+        
+        # Try to delete without password
+        response = self.client.post(
+            self.url,
+            {'confirmation': 'DELETE'},
+            follow=True
+        )
+        self.assertRedirects(response, reverse('home'), status_code=302, target_status_code=200)
+        self.assertFalse(User.objects.filter(username='@oauthuser').exists())
+
+    def test_delete_account_shows_oauth_info(self):
+        """Test that delete account page shows OAuth info for OAuth users."""
+        oauth_user = User.objects.create_user(
+            username='@oauthuser',
+            email='oauth@example.com'
+        )
+        oauth_user.set_unusable_password()
+        oauth_user.save()
+        
+        try:
+            from allauth.socialaccount.models import SocialAccount
+            SocialAccount.objects.create(
+                user=oauth_user,
+                provider='google',
+                uid='123456789',
+                extra_data={}
+            )
+        except ImportError:
+            pass
+        
+        self.client.login(username='@oauthuser', password='')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'OAuth')
+

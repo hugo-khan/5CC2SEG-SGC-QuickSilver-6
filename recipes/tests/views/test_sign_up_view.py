@@ -39,7 +39,7 @@ class SignUpViewTestCase(TestCase, LogInTester):
         response = self.client.get(self.url, follow=True)
         redirect_url = reverse('dashboard')
         self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'dashboard.html')
+        self.assertTemplateUsed(response, 'dashboard_welcome.html')
 
     def test_unsuccesful_sign_up(self):
         self.form_input['username'] = 'BAD_USERNAME'
@@ -61,7 +61,7 @@ class SignUpViewTestCase(TestCase, LogInTester):
         self.assertEqual(after_count, before_count+1)
         response_url = reverse('dashboard')
         self.assertRedirects(response, response_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'dashboard.html')
+        self.assertTemplateUsed(response, 'dashboard_welcome.html')
         user = User.objects.get(username='@janedoe')
         self.assertEqual(user.first_name, 'Jane')
         self.assertEqual(user.last_name, 'Doe')
@@ -78,4 +78,4 @@ class SignUpViewTestCase(TestCase, LogInTester):
         self.assertEqual(after_count, before_count)
         redirect_url = reverse('dashboard')
         self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'dashboard.html')
+        self.assertTemplateUsed(response, 'dashboard_welcome.html')

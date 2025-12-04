@@ -5,9 +5,9 @@ from django.contrib.auth import authenticate
 class DeleteAccountForm(forms.Form):
     """
     Form requiring explicit confirmation plus password to delete an account.
-
-    This form ensures users deliberately confirm deletion and authenticate
-    with their current password before the account is removed.
+    
+    For users who signed in with Google OAuth (no password), only confirmation is required.
+    For users with passwords, both confirmation and password are required.
     """
 
     confirmation = forms.CharField(
@@ -28,11 +28,32 @@ class DeleteAccountForm(forms.Form):
                 'autocomplete': 'current-password',
             }
         ),
+        required=False,
     )
 
     def __init__(self, user=None, **kwargs):
         super().__init__(**kwargs)
         self.user = user
+        
+        # Check if user has a usable password or signed in with OAuth
+        if user:
+            has_password = user.has_usable_password()
+            has_social_account = self._has_social_account(user)
+            
+            # If user has no password and signed in with OAuth, make password optional
+            if not has_password or has_social_account:
+                self.fields['password'].required = False
+                self.fields['password'].widget.attrs['placeholder'] = 'Not required for OAuth accounts'
+            else:
+                self.fields['password'].required = True
+
+    def _has_social_account(self, user):
+        """Check if user has a social account (Google OAuth)."""
+        try:
+            from allauth.socialaccount.models import SocialAccount
+            return SocialAccount.objects.filter(user=user, provider='google').exists()
+        except ImportError:
+            return False
 
     def clean_confirmation(self):
         confirmation = self.cleaned_data.get('confirmation', '')
@@ -42,13 +63,17 @@ class DeleteAccountForm(forms.Form):
 
     def clean(self):
         super().clean()
-        password = self.cleaned_data.get('password')
-        if self.user is not None and password:
+        
+        # Only validate password if user has a usable password
+        if self.user and self.user.has_usable_password():
+            password = self.cleaned_data.get('password')
+            if not password:
+                self.add_error('password', "Password is required.")
+                return
+            
             user = authenticate(username=self.user.username, password=password)
-        else:
-            user = None
-        if user is None:
-            self.add_error('password', "Password is incorrect.")
+            if user is None:
+                self.add_error('password', "Password is incorrect.")
 
     def delete_user(self):
         """Delete the associated user instance."""

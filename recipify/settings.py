@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables from .env when present (Plan B)
+# Load environment variables from .env when present
 load_dotenv(BASE_DIR / ".env")
 
 
@@ -44,11 +44,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    
+    # Third-party apps
+    'widget_tweaks',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'widget_tweaks',
+    
+    # Local apps
     'recipes',
 ]
 
@@ -72,6 +76,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -128,59 +133,74 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = 'assets/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / 'static',
 ]
 
-SITE_ID = 1
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# User model for authentication and login purposes
+# Custom User Model
 AUTH_USER_MODEL = 'recipes.User'
 
-# Login URL for redirecting users from login protected views
-LOGIN_URL = 'log_in'
+# Site ID for allauth
+SITE_ID = 1
 
-# URL where @login_prohibited redirects to
-REDIRECT_URL_WHEN_LOGGED_IN = 'dashboard'
-LOGIN_REDIRECT_URL = REDIRECT_URL_WHEN_LOGGED_IN
-ACCOUNT_LOGOUT_REDIRECT_URL = 'home'
-
+# Authentication backends
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+# Allauth settings
+LOGIN_REDIRECT_URL = 'dashboard'
+ACCOUNT_LOGOUT_REDIRECT_URL = 'home'
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_ADAPTER = 'recipes.adapters.RecipeAccountAdapter'
 
+# Redirect URL when logged in
+REDIRECT_URL_WHEN_LOGGED_IN = 'dashboard'
+
+# Google OAuth Credentials
+# Set these via environment variables (use .env file for local development)
+# Never commit actual secrets to the repository!
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET', '')
 GOOGLE_OAUTH_ENABLED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
         'APP': {
             'client_id': GOOGLE_CLIENT_ID,
             'secret': GOOGLE_CLIENT_SECRET,
             'key': '',
-        },
-    },
+        }
+    }
 }
 
-# Convert Django ERROR messages to Bootstrap DANGER messages
+# Messages framework
 MESSAGE_TAGS = {
+    messages.DEBUG: 'debug',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
     messages.ERROR: 'danger',
 }
+

@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView, DeleteView
 
 from recipes.forms import RecipeForm, CommentForm
 from recipes.models import Comment, Follow, Recipe, SavedRecipe, User
@@ -121,6 +121,25 @@ class RecipeUpdateView(LoginRequiredMixin, RecipeAuthorRequiredMixin, UpdateView
 
     def get_success_url(self):
         return reverse("recipe_detail", kwargs={"pk": self.object.pk})
+
+
+class RecipeDeleteView(LoginRequiredMixin, RecipeAuthorRequiredMixin, DeleteView):
+    """Allow authors to delete their recipes."""
+
+    model = Recipe
+    template_name = "recipes/recipe_confirm_delete.html"
+    success_url = reverse_lazy("recipe_list")
+
+    def delete(self, request, *args, **kwargs):
+        recipe = self.get_object()
+        messages.success(self.request, f'Recipe "{recipe.title}" has been deleted.')
+        return super().delete(request, *args, **kwargs)
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        messages.error(self.request, "You do not have permission to delete this recipe.")
+        return redirect("recipe_detail", pk=self.get_object().pk)
 
 
 class FeedView(LoginRequiredMixin, ListView):
