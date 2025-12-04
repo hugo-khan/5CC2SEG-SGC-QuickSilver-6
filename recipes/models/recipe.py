@@ -70,6 +70,10 @@ class Recipe(models.Model):
 
     # Sharing
     share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    
+    # Image - Using URLField only to avoid Pillow dependency issues
+    # Can add ImageField later if needed after installing system dependencies
+    image_url = models.URLField(blank=True, null=True, help_text="External image URL (e.g., from AI generation or Unsplash)")
 
     class Meta:
         ordering = ["-created_at", "-date_posted"]

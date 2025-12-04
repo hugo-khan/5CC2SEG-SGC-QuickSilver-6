@@ -10,15 +10,22 @@
   {% if recipes %}
     <div class="list-group">
       {% for recipe in recipes %}
-        <a class="list-group-item list-group-item-action" href="{% url 'recipe_detail' recipe.pk %}">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">{{ recipe.title }}</h5>
-            <small>{{ recipe.created_at|date:"j M Y" }}</small>
+        <a class="list-group-item list-group-item-action recipe-list-item" href="{% url 'recipe_detail' recipe.pk %}">
+          <div class="d-flex w-100 justify-content-between align-items-start">
+            <div class="flex-grow-1">
+              {% if recipe.image_url %}
+              <div class="recipe-list-image">
+                <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}">
+              </div>
+              {% endif %}
+              <h5 class="mb-1">{{ recipe.title }}</h5>
+              <p class="mb-1 text-muted">By {{ recipe.author.username }}</p>
+              {% if recipe.summary %}
+                <p class="mb-1">{{ recipe.summary }}</p>
+              {% endif %}
+            </div>
+            <small class="ms-3">{{ recipe.created_at|date:"j M Y" }}</small>
           </div>
-          <p class="mb-1 text-muted">By {{ recipe.author.username }}</p>
-          {% if recipe.summary %}
-            <p class="mb-1">{{ recipe.summary }}</p>
-          {% endif %}
         </a>
       {% endfor %}
     </div>

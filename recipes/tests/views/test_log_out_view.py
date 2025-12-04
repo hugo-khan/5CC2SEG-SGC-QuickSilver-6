@@ -22,6 +22,7 @@ class LogOutViewTestCase(TestCase, LogInTester):
         response = self.client.get(self.url, follow=True)
         response_url = reverse('home')
         self.assertRedirects(response, response_url, status_code=302, target_status_code=200)
+        # After logout, home redirects to login if not authenticated, so check for login template
         self.assertTemplateUsed(response, 'home.html')
         self.assertFalse(self._is_logged_in())
 
@@ -29,5 +30,6 @@ class LogOutViewTestCase(TestCase, LogInTester):
         response = self.client.get(self.url, follow=True)
         response_url = reverse('home')
         self.assertRedirects(response, response_url, status_code=302, target_status_code=200)
+        # Home view uses @login_prohibited, so unauthenticated users see home.html
         self.assertTemplateUsed(response, 'home.html')
         self.assertFalse(self._is_logged_in())

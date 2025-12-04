@@ -50,7 +50,7 @@ class LogInViewTestCase(TestCase, LogInTester, MenuTesterMixin):
         response = self.client.get(self.url, follow=True)
         redirect_url = reverse('dashboard')
         self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'dashboard.html')
+        self.assertTemplateUsed(response, 'dashboard_welcome.html')
 
     def test_unsuccesful_log_in(self):
         form_input = { 'username': '@johndoe', 'password': 'WrongPassword123' }
@@ -97,7 +97,7 @@ class LogInViewTestCase(TestCase, LogInTester, MenuTesterMixin):
         self.assertTrue(self._is_logged_in())
         response_url = reverse('dashboard')
         self.assertRedirects(response, response_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'dashboard.html')
+        self.assertTemplateUsed(response, 'dashboard_welcome.html')
         messages_list = list(response.context['messages'])
         self.assertEqual(len(messages_list), 0)
         self.assert_menu(response)
@@ -118,7 +118,7 @@ class LogInViewTestCase(TestCase, LogInTester, MenuTesterMixin):
         response = self.client.post(self.url, form_input, follow=True)
         redirect_url = reverse('dashboard')
         self.assertRedirects(response, redirect_url, status_code=302, target_status_code=200)
-        self.assertTemplateUsed(response, 'dashboard.html')
+        self.assertTemplateUsed(response, 'dashboard_welcome.html')
 
     def test_post_log_in_with_incorrect_credentials_and_redirect(self):
         redirect_url = reverse('profile')
@@ -141,3 +141,20 @@ class LogInViewTestCase(TestCase, LogInTester, MenuTesterMixin):
         messages_list = list(response.context['messages'])
         self.assertEqual(len(messages_list), 1)
         self.assertEqual(messages_list[0].level, messages.ERROR)
+
+    def test_log_in_includes_google_oauth_context(self):
+        """Test that log in view includes Google OAuth context."""
+        response = self.client.get(self.url)
+        self.assertIn('google_login_enabled', response.context)
+        self.assertIn('google_login_url', response.context)
+
+    def test_log_in_google_oauth_url_when_enabled(self):
+        """Test that Google OAuth URL is generated when enabled."""
+        from django.conf import settings
+        original_value = getattr(settings, 'GOOGLE_OAUTH_ENABLED', False)
+        try:
+            settings.GOOGLE_OAUTH_ENABLED = True
+            response = self.client.get(self.url)
+            self.assertIsNotNone(response.context.get('google_login_url'))
+        finally:
+            settings.GOOGLE_OAUTH_ENABLED = original_value
