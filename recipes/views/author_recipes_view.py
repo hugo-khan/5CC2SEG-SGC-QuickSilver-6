@@ -1,30 +1,28 @@
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from recipes.models import Recipe
-from recipes.forms.recipe_filter_form import RecipeFilterForm
 from django.core.paginator import Paginator
 
 def author_recipes(request, author_id):
-    author = get_object_or_404(User, id=author_id)
+    author = get_object_or_404(get_user_model(), id=author_id)
     recipes = Recipe.objects.filter(author=author)
-    form = RecipeFilterForm(request.GET or None)
-    
+
     # Search by name
-    if request.GET.get('search'):
-        search_term = request.GET.get('search')
+    search_term = (request.GET.get('search') or "").strip()
+    if search_term:
         recipes = recipes.filter(
             Q(name__icontains=search_term) | 
             Q(description__icontains=search_term)
         )
-    
+
     # Filter by dietary requirements
-    dietary_filters = request.GET.getlist('dietary_requirement')
+    dietary_filters = [item for item in request.GET.getlist('dietary_requirement') if item]
     if dietary_filters:
         recipes = recipes.filter(dietary_requirement__in=dietary_filters)
-    
+
     # Sort by
-    sort_by = request.GET.get('sort_by', 'date')
+    sort_by = request.GET.get('sort_by') or 'date'
     if sort_by == 'date':
         recipes = recipes.order_by('-date_posted')
     elif sort_by == '-date':
@@ -45,7 +43,10 @@ def author_recipes(request, author_id):
     
     context = {
         'author': author,
-        'form': form,
+        'search_value': search_term,
+        'current_sort': sort_by,
+        'selected_dietary': dietary_filters,
+        'dietary_choices': Recipe.DIETARY_CHOICES,
         'page_obj': page_obj,
         'recipes': page_obj.object_list,
         'querystring': query_params.urlencode(),

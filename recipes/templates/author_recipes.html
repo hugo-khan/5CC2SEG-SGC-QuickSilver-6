@@ -12,13 +12,19 @@
             <div class="col-md-6">
                 <div class="mb-3">
                     <label class="form-label"><strong>Search</strong></label>
-                    {{ form.search }}
+                    <input type="text" name="search" class="form-control" placeholder="Search by name..." value="{{ search_value }}">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="mb-3">
                     <label class="form-label"><strong>Sort By</strong></label>
-                    {{ form.sort_by }}
+                    <select name="sort_by" class="form-control">
+                        <option value="date" {% if current_sort == 'date' %}selected{% endif %}>Date Posted (Newest)</option>
+                        <option value="-date" {% if current_sort == '-date' %}selected{% endif %}>Date Posted (Oldest)</option>
+                        <option value="popularity" {% if current_sort == 'popularity' %}selected{% endif %}>Popularity (High to Low)</option>
+                        <option value="-popularity" {% if current_sort == '-popularity' %}selected{% endif %}>Popularity (Low to High)</option>
+                        <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -26,10 +32,10 @@
         <div class="mb-3">
             <label class="form-label"><strong>Dietary Requirements:</strong></label>
             <div>
-                {% for choice in form.dietary_requirement %}
+                {% for value, label in dietary_choices %}
                     <div class="form-check form-check-inline">
-                        {{ choice.tag }}
-                        {{ choice.label_tag }}
+                        <input class="form-check-input" type="checkbox" name="dietary_requirement" id="dietary_{{ value }}" value="{{ value }}" {% if value in selected_dietary %}checked{% endif %}>
+                        <label class="form-check-label" for="dietary_{{ value }}">{{ label }}</label>
                     </div>
                 {% endfor %}
             </div>
@@ -52,7 +58,7 @@
                             🥗 Dietary: <strong>{{ recipe.get_dietary_requirement_display }}</strong><br>
                             👍 Popularity: {{ recipe.popularity }} views
                         </p>
-                        <a href="#" class="btn btn-sm btn-primary">View Recipe</a>
+                        <a href="{% url 'recipe_detail' recipe.pk %}" class="btn btn-sm btn-primary">View Recipe</a>
                     </div>
                 </div>
             </div>
