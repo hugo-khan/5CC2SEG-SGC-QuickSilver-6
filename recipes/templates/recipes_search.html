@@ -62,6 +62,11 @@
         {% for recipe in recipes %}
             <div class="col-md-4 mb-3">
                 <div class="card h-100">
+                    {% if recipe.image_url %}
+                    <div class="recipe-search-image">
+                        <img src="{{ recipe.image_url }}" alt="{{ recipe.name }}" class="card-img-top">
+                    </div>
+                    {% endif %}
                     <div class="card-body">
                         <h5 class="card-title">{{ recipe.name }}</h5>
                         <p class="card-text">{{ recipe.description|truncatewords:15 }}</p>
@@ -73,7 +78,7 @@
                         <p class="card-text">
                             👨‍🍳 By: <a href="{% url 'author_recipes' recipe.author.id %}">{{ recipe.author.username }}</a>
                         </p>
-                        <a href="#" class="btn btn-sm btn-primary">View Recipe</a>
+                        <a href="{% url 'recipe_detail' recipe.pk %}" class="btn btn-sm btn-primary">View Recipe</a>
                     </div>
                 </div>
             </div>

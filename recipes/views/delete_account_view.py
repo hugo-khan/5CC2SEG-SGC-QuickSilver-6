@@ -13,6 +13,7 @@ from recipes.forms import DeleteAccountForm
 class DeleteAccountView(LoginRequiredMixin, FormView):
     """
     Allow authenticated users to permanently delete their account.
+    Handles both password-based and OAuth (Google) accounts.
     """
 
     template_name = 'delete_account.html'
@@ -23,6 +24,31 @@ class DeleteAccountView(LoginRequiredMixin, FormView):
         kwargs = super().get_form_kwargs()
         kwargs.update({'user': self.request.user})
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        """Add context about whether user has password or OAuth account."""
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        # Check if user has a usable password
+        has_password = user.has_usable_password()
+        
+        # Check if user has Google OAuth account
+        has_google_account = False
+        try:
+            from allauth.socialaccount.models import SocialAccount
+            has_google_account = SocialAccount.objects.filter(
+                user=user, 
+                provider='google'
+            ).exists()
+        except ImportError:
+            pass
+        
+        context['has_password'] = has_password
+        context['has_google_account'] = has_google_account
+        context['is_oauth_user'] = has_google_account or not has_password
+        
+        return context
 
     def form_valid(self, form):
         form.delete_user()

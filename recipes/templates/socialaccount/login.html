@@ -5,16 +5,16 @@
     <div class="row g-5 align-items-center">
       <div class="col-lg-6">
         <p class="eyebrow text-uppercase fw-semibold mb-2">Connect your account</p>
-        <h1 class="display-5 fw-bold mb-4">Continue with Google to access Recipify.</h1>
+        <h1 class="display-5 fw-bold mb-4">Continue with Google to access Recipify</h1>
         <p class="lead text-muted mb-4">
           We use Google only to verify who you are and retrieve your basic profile
           information (name and email). No recipes or collaboration data is ever
           stored in your Google account.
         </p>
         <ul class="auth-highlights">
-          <li>Secure OAuth 2.0 flow handled by Google.</li>
-          <li>One-tap access on devices where you are already signed in.</li>
-          <li>Easy to revoke access from your Google account at any time.</li>
+          <li>Secure OAuth 2.0 flow handled by Google</li>
+          <li>One-tap access on devices where you are already signed in</li>
+          <li>Easy to revoke access from your Google account at any time</li>
         </ul>
       </div>
       <div class="col-lg-5 ms-lg-auto">
@@ -28,13 +28,28 @@
             </div>
             <form method="post" class="auth-form">
               {% csrf_token %}
-              {{ form.as_p }}
-              <button type="submit" class="btn btn-outline-dark w-100 oauth-button">
+              {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ form.non_field_errors }}
+                </div>
+              {% endif %}
+              {% if form.errors %}
+                <div class="alert alert-danger">
+                  <ul class="mb-0">
+                    {% for field in form %}
+                      {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                      {% endfor %}
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
+              <button type="submit" class="btn btn-primary w-100 mb-3 oauth-button">
                 <span class="oauth-icon">G</span>
                 Continue to Google
               </button>
             </form>
-            <p class="text-center text-muted small mb-0 mt-3">
+            <p class="text-center text-muted small mb-0 mt-4">
               Prefer not to use Google? <a href="{% url 'log_in' %}">Sign in with username and password instead.</a>
             </p>
           </div>
