@@ -1,0 +1,171 @@
+{% extends 'base_content.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="mb-1">
+            <span class="bi-robot"></span> AI Chef
+          </h1>
+          <p class="text-muted mb-0">Ask me to suggest a recipe and I'll create one for you!</p>
+        </div>
+        {% if chat_messages %}
+        <form method="post" action="{% url 'ai_chatbot_clear' %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-secondary btn-sm">
+            <span class="bi-trash"></span> Clear Chat
+          </button>
+        </form>
+        {% endif %}
+      </div>
+
+      {% if not api_configured %}
+      <div class="alert alert-warning" role="alert">
+        <strong><span class="bi-exclamation-triangle"></span> API Not Configured</strong>
+        <p class="mb-0 mt-2">
+          The AI features require API keys to be configured. Please set your 
+          <code>OPENAI_API_KEY</code> and <code>SERPER_API_KEY</code> environment variables
+          or update <code>recipes/ai/config.py</code>.
+        </p>
+      </div>
+      {% endif %}
+
+      <!-- Chat Container -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          
+          <!-- Chat Transcript -->
+          <div id="chat-transcript" class="chat-transcript mb-4" style="max-height: 500px; overflow-y: auto;">
+            {% if chat_messages %}
+              {% for msg in chat_messages %}
+              <div class="chat-message chat-message-{{ msg.role }} mb-3">
+                <div class="d-flex {% if msg.role == 'user' %}justify-content-end{% endif %}">
+                  <div class="message-bubble {% if msg.role == 'user' %}bg-primary text-white{% else %}bg-light{% endif %} rounded-3 p-3" style="max-width: 80%;">
+                    {% if msg.role == 'assistant' %}
+                    <div class="fw-bold text-muted small mb-1">
+                      <span class="bi-robot"></span> AI Chef
+                    </div>
+                    {% endif %}
+                    <div class="message-content" style="white-space: pre-wrap;">{{ msg.content }}</div>
+                    <div class="text-{% if msg.role == 'user' %}white-50{% else %}muted{% endif %} small mt-1">
+                      {{ msg.created_at|date:"g:i A" }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="text-center text-muted py-5" id="empty-state">
+                <div class="display-1 mb-3">👨‍🍳</div>
+                <h5>Welcome to AI Chef!</h5>
+                <p>Tell me what kind of recipe you'd like, and I'll create one for you.</p>
+                <p class="small">Try: "I want a healthy vegetarian pasta dish" or "Quick breakfast ideas"</p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Loading Indicator (hidden by default) -->
+          <div id="loading-indicator" class="text-center py-3 d-none">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Generating recipe...</span>
+            </div>
+            <p class="text-muted mt-2">Researching and creating your recipe...</p>
+          </div>
+
+          <!-- Publish Button (shown only when draft exists) -->
+          {% if latest_draft %}
+          <div id="publish-section" class="alert alert-success d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <strong><span class="bi-check-circle"></span> Recipe Ready!</strong>
+              <span class="ms-2">{{ latest_draft.draft_payload.title|default:"Your recipe" }} is ready to publish.</span>
+            </div>
+            <form method="post" action="{% url 'ai_chatbot_publish' latest_draft.id %}" id="publish-form" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-success" id="publish-btn">
+                <span class="bi-upload"></span> Publish Recipe
+              </button>
+            </form>
+          </div>
+          {% endif %}
+
+          <!-- Message Input Form -->
+          <form method="post" action="{% url 'ai_chatbot_message' %}" id="chat-form">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="prompt" class="form-label">What recipe would you like?</label>
+              <textarea 
+                class="form-control" 
+                id="prompt" 
+                name="prompt" 
+                rows="2" 
+                placeholder="e.g., I want a quick and easy chicken dinner..."
+                required
+                {% if not api_configured %}disabled{% endif %}
+              ></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="dietary_requirements" class="form-label">
+                Dietary Requirements <span class="text-muted">(optional)</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="dietary_requirements" 
+                name="dietary_requirements"
+                placeholder="e.g., vegetarian, gluten-free, nut allergy..."
+                {% if not api_configured %}disabled{% endif %}
+              >
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <button type="submit" class="btn btn-primary" id="send-btn" {% if not api_configured %}disabled{% endif %}>
+                <span class="bi-send"></span> Get Recipe Suggestion
+              </button>
+              <a href="{% url 'recipe_create' %}" class="btn btn-outline-secondary">
+                <span class="bi-pencil"></span> Write My Own
+              </a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+      <!-- Tips Card -->
+      <div class="card border-0 bg-light">
+        <div class="card-body">
+          <h6 class="card-title"><span class="bi-lightbulb"></span> Tips for better results</h6>
+          <ul class="mb-0 small text-muted">
+            <li>Be specific about ingredients you have or want to use</li>
+            <li>Mention cooking time constraints (e.g., "under 30 minutes")</li>
+            <li>Include cuisine preferences (e.g., "Italian", "Asian-inspired")</li>
+            <li>Specify dietary needs in the dietary requirements field</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+  .chat-transcript {
+    min-height: 200px;
+  }
+  .message-bubble {
+    word-wrap: break-word;
+  }
+  .chat-message-user .message-bubble {
+    border-bottom-right-radius: 0.25rem !important;
+  }
+  .chat-message-assistant .message-bubble {
+    border-bottom-left-radius: 0.25rem !important;
+  }
+</style>
+
+<script src="{% static 'js/ai_chatbot.js' %}"></script>
+{% endblock %}
+

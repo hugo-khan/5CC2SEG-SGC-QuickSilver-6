@@ -13,3 +13,6 @@ PyJWT==2.9.0
 python-dotenv==1.0.1
 requests==2.32.3
 sqlparse==0.5.3
+# AI Chatbot dependencies (CrewAI)
+crewai>=0.80.0
+crewai-tools>=0.14.0

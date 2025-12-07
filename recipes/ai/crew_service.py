@@ -1,0 +1,454 @@
+"""
+CrewAI service module for AI-powered recipe suggestions.
+
+This module implements a 3-agent sequential workflow:
+1. Recipe Researcher (RAG) - Retrieves and synthesizes recipes from web sources
+2. Formatter/UX Writer - Converts structured data to user-friendly format
+3. Publisher Agent - Handles recipe publishing to the database
+
+All external API calls are isolated here for easy mocking in tests.
+"""
+
+import json
+import logging
+from typing import Any
+
+logger = logging.getLogger(__name__)
+
+# Lazy imports for crewai to allow migrations without the package installed
+_crewai_available = None
+
+def _check_crewai():
+    """Check if crewai is available and import it lazily."""
+    global _crewai_available
+    if _crewai_available is None:
+        try:
+            from crewai import Agent, Task, Crew, Process
+            from crewai.tools import tool
+            from crewai_tools import SerperDevTool
+            _crewai_available = True
+        except ImportError:
+            _crewai_available = False
+    return _crewai_available
+
+
+def _get_crewai_components():
+    """Get crewai components, raising ImportError if not available."""
+    if not _check_crewai():
+        raise ImportError(
+            "crewai is not installed. Please install it with: pip install crewai crewai-tools"
+        )
+    from crewai import Agent, Task, Crew, Process
+    from crewai.tools import tool
+    from crewai_tools import SerperDevTool
+    return Agent, Task, Crew, Process, tool, SerperDevTool
+
+
+# =============================================================================
+# Custom Tools
+# =============================================================================
+
+def _create_recipe_web_search_tool():
+    """Create the recipe web search tool using crewai decorators."""
+    from recipes.ai.config import SERPER_API_KEY
+    _, _, _, _, tool, SerperDevTool = _get_crewai_components()
+    
+    @tool("recipe_web_search")
+    def recipe_web_search(query: str) -> str:
+        """
+        Search the web for recipe information using Serper API.
+        Use this to find recipe ideas, ingredients, and cooking instructions.
+        """
+        try:
+            serper_tool = SerperDevTool(api_key=SERPER_API_KEY)
+            results = serper_tool.run(search_query=query)
+            return results
+        except Exception as e:
+            logger.error(f"Serper search failed: {e}")
+            return f"Search failed: {str(e)}"
+    
+    return recipe_web_search
+
+
+# =============================================================================
+# Agent Definitions
+# =============================================================================
+
+def create_recipe_researcher():
+    """
+    Agent 1: Recipe Research & Culinary Planner
+    
+    Responsible for retrieving relevant recipe sources using web search
+    and synthesizing a coherent recipe that meets dietary constraints.
+    """
+    Agent, _, _, _, _, _ = _get_crewai_components()
+    recipe_web_search = _create_recipe_web_search_tool()
+    
+    return Agent(
+        role="Recipe Research & Culinary Planner",
+        goal=(
+            "Retrieve relevant recipe sources using web search and synthesize "
+            "a coherent, complete recipe that meets the user's dietary constraints "
+            "and preferences. Provide accurate ingredient quantities and clear instructions."
+        ),
+        backstory=(
+            "You are a seasoned test-kitchen researcher with 15 years of experience "
+            "developing recipes for major food publications. You prioritize reliability, "
+            "clarity, and food safety in every recipe. You're skilled at finding the best "
+            "recipe sources online and combining techniques from multiple sources into "
+            "a single optimized recipe. You always note potential ingredient substitutions "
+            "for common dietary restrictions."
+        ),
+        tools=[recipe_web_search],
+        verbose=True,
+        allow_delegation=False,
+    )
+
+
+def create_formatter_agent():
+    """
+    Agent 2: Cookbook Editor & UX Writer
+    
+    Responsible for converting structured recipe data into:
+    1. A polished chat response for display
+    2. Django-form-ready field mapping
+    """
+    Agent, _, _, _, _, _ = _get_crewai_components()
+    
+    return Agent(
+        role="Cookbook Editor & UX Writer",
+        goal=(
+            "Convert structured recipe JSON into two outputs: "
+            "(1) a polished, readable chat response for the user, and "
+            "(2) a Django-form-ready dictionary with exact field mappings. "
+            "Ensure consistent formatting, readable step numbering, and proper structure."
+        ),
+        backstory=(
+            "You are an experienced cookbook editor who has worked on over 50 published "
+            "cookbooks. You understand how to present recipes clearly, with proper "
+            "ingredient formatting, numbered steps, and helpful tips. You also have "
+            "technical expertise in mapping recipe data to web form fields, ensuring "
+            "data integrity between the AI output and the application's database schema."
+        ),
+        verbose=True,
+        allow_delegation=False,
+    )
+
+
+def create_publisher_agent():
+    """
+    Agent 3: Publishing Assistant
+    
+    Responsible for validating and publishing recipes to the database.
+    Only publishes when explicitly requested by the user.
+    """
+    Agent, _, _, _, _, _ = _get_crewai_components()
+    
+    return Agent(
+        role="Publishing Assistant",
+        goal=(
+            "Validate recipe data completeness and publish to the database only when "
+            "explicitly requested by the user. Never publish without clear instruction. "
+            "Prevent duplicate recipes and ensure all required fields are present."
+        ),
+        backstory=(
+            "You are a careful editorial assistant with a strong attention to detail. "
+            "You never publish content without explicit approval. You check for duplicates, "
+            "validate that all required recipe fields are present and properly formatted, "
+            "and ensure the recipe meets quality standards before publishing. You always "
+            "confirm actions with clear success or failure messages."
+        ),
+        verbose=True,
+        allow_delegation=False,
+    )
+
+
+# =============================================================================
+# Task Definitions
+# =============================================================================
+
+def create_research_task(prompt: str, dietary_requirements: str, researcher):
+    """Create the recipe research task."""
+    _, Task, _, _, _, _ = _get_crewai_components()
+    
+    dietary_note = f"Dietary requirements: {dietary_requirements}" if dietary_requirements else "No specific dietary requirements."
+    
+    return Task(
+        description=f"""
+Research and create a complete recipe based on the user's request.
+
+User prompt: "{prompt}"
+{dietary_note}
+
+You MUST:
+1. Search the web for relevant recipe information and sources
+2. Synthesize findings into a complete, coherent recipe
+3. Include accurate ingredient quantities with notes for substitutions
+4. Provide clear, numbered cooking instructions
+5. Note any dietary considerations or allergen warnings
+
+Output MUST be valid JSON with this exact structure:
+{{
+    "title": "Recipe Title",
+    "summary": "Brief 1-2 sentence description",
+    "ingredients": [
+        {{"item": "ingredient name", "quantity": "amount with unit", "notes": "optional notes"}}
+    ],
+    "instructions": [
+        "Step 1: ...",
+        "Step 2: ..."
+    ],
+    "prep_time_minutes": 15,
+    "cook_time_minutes": 30,
+    "total_time_minutes": 45,
+    "servings": 4,
+    "dietary_notes": "Relevant dietary information",
+    "sources": [
+        {{"title": "Source Name", "url": "https://..."}}
+    ]
+}}
+""",
+        expected_output="Valid JSON object with the complete recipe structure as specified.",
+        agent=researcher,
+    )
+
+
+def create_format_task(formatter):
+    """Create the formatting task."""
+    _, Task, _, _, _, _ = _get_crewai_components()
+    
+    return Task(
+        description="""
+Take the structured recipe JSON from the previous task and create two outputs:
+
+1. assistant_display: A beautifully formatted text response for the chat interface.
+   Include:
+   - Recipe title as a header
+   - Brief description
+   - Ingredients list (formatted nicely)
+   - Numbered cooking steps
+   - Time and serving information
+   - Any dietary notes
+   - Sources cited
+
+2. form_fields: A dictionary matching the exact Django Recipe form fields:
+   - title: string (max 200 chars)
+   - summary: string (max 255 chars)
+   - ingredients: string (ingredients separated by newlines, format: "quantity item - notes")
+   - instructions: string (steps separated by newlines)
+   - prep_time_minutes: integer or null
+   - cook_time_minutes: integer or null
+   - servings: integer or null
+
+Output MUST be valid JSON with this structure:
+{
+    "assistant_display": "Your formatted chat message here...",
+    "form_fields": {
+        "title": "...",
+        "summary": "...",
+        "ingredients": "...",
+        "instructions": "...",
+        "prep_time_minutes": 15,
+        "cook_time_minutes": 30,
+        "servings": 4
+    }
+}
+""",
+        expected_output="Valid JSON with assistant_display string and form_fields dictionary.",
+        agent=formatter,
+    )
+
+
+# =============================================================================
+# Main Service Functions
+# =============================================================================
+
+class CrewServiceError(Exception):
+    """Custom exception for crew service errors."""
+    pass
+
+
+def run_suggestion(prompt: str, dietary_requirements: str = "") -> dict[str, Any]:
+    """
+    Run the recipe suggestion crew workflow.
+    
+    Args:
+        prompt: User's recipe request
+        dietary_requirements: Optional dietary restrictions
+    
+    Returns:
+        dict with keys:
+            - assistant_display: Formatted response for chat
+            - form_fields: Dict matching Recipe form fields
+            - raw: Raw output from the crew
+    
+    Raises:
+        CrewServiceError: If the workflow fails or keys are not configured
+    """
+    import os
+    from recipes.ai.config import keys_configured, OPENAI_API_KEY, SERPER_API_KEY
+    
+    if not keys_configured():
+        raise CrewServiceError(
+            "API keys are not configured. Please set OPENAI_API_KEY and SERPER_API_KEY "
+            "in your environment or in recipes/ai/config.py"
+        )
+    
+    # Set environment variables for CrewAI/litellm to pick up
+    # This is necessary because litellm reads directly from os.environ
+    os.environ["OPENAI_API_KEY"] = "OPENAI_API_KEY"
+    os.environ["SERPER_API_KEY"] = "SERPER_API_KEY"
+    
+    try:
+        # Get crewai components
+        _, _, Crew, Process, _, _ = _get_crewai_components()
+        
+        # Create agents
+        researcher = create_recipe_researcher()
+        formatter = create_formatter_agent()
+        
+        # Create tasks
+        research_task = create_research_task(prompt, dietary_requirements, researcher)
+        format_task = create_format_task(formatter)
+        
+        # Create and run crew
+        crew = Crew(
+            agents=[researcher, formatter],
+            tasks=[research_task, format_task],
+            process=Process.sequential,
+            verbose=True,
+        )
+        
+        result = crew.kickoff()
+        
+        # Parse the result
+        raw_output = str(result)
+        
+        # Try to extract JSON from the output
+        parsed = _parse_crew_output(raw_output)
+        
+        return {
+            "assistant_display": parsed.get("assistant_display", raw_output),
+            "form_fields": parsed.get("form_fields", {}),
+            "raw": raw_output,
+        }
+        
+    except ImportError as e:
+        logger.error(f"CrewAI not available: {e}")
+        raise CrewServiceError(
+            "AI features are not available. CrewAI is not installed. "
+            "Please run: pip install crewai crewai-tools"
+        )
+    except Exception as e:
+        logger.error(f"Crew workflow failed: {e}")
+        raise CrewServiceError(f"Failed to generate recipe suggestion: {str(e)}")
+
+
+def _parse_crew_output(output: str) -> dict:
+    """
+    Parse the crew output to extract structured data.
+    Handles various output formats the LLM might produce.
+    """
+    # Try to find JSON in the output
+    import re
+    
+    # Look for JSON block (possibly wrapped in markdown code blocks)
+    json_patterns = [
+        r'```json\s*(.*?)\s*```',
+        r'```\s*(.*?)\s*```',
+        r'\{[\s\S]*"assistant_display"[\s\S]*\}',
+    ]
+    
+    for pattern in json_patterns:
+        match = re.search(pattern, output, re.DOTALL)
+        if match:
+            try:
+                json_str = match.group(1) if '```' in pattern else match.group(0)
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                continue
+    
+    # If no valid JSON found, try to parse the entire output
+    try:
+        return json.loads(output)
+    except json.JSONDecodeError:
+        # Return a basic structure with the raw output as display
+        return {
+            "assistant_display": output,
+            "form_fields": {},
+        }
+
+
+def publish_from_draft(draft, user) -> dict[str, Any]:
+    """
+    Publish a recipe from a stored draft.
+    
+    Args:
+        draft: RecipeDraftSuggestion instance
+        user: User instance (must match draft.user)
+    
+    Returns:
+        dict with keys:
+            - recipe: The created Recipe instance
+            - recipe_url: URL to the recipe detail page
+    
+    Raises:
+        CrewServiceError: If publishing fails or user doesn't own draft
+    """
+    from django.urls import reverse
+    from recipes.models import Recipe, RecipeDraftSuggestion
+    
+    # Validate ownership
+    if draft.user != user:
+        raise CrewServiceError("You can only publish your own drafts.")
+    
+    # Check draft status
+    if draft.status == RecipeDraftSuggestion.Status.PUBLISHED:
+        raise CrewServiceError("This recipe has already been published.")
+    
+    # Get form fields from draft
+    form_fields = draft.draft_payload
+    
+    if not form_fields:
+        raise CrewServiceError("Draft has no recipe data to publish.")
+    
+    # Validate required fields
+    required_fields = ["title", "ingredients", "instructions"]
+    missing = [f for f in required_fields if not form_fields.get(f)]
+    if missing:
+        raise CrewServiceError(f"Missing required fields: {', '.join(missing)}")
+    
+    try:
+        # Create the recipe
+        recipe = Recipe.objects.create(
+            author=user,
+            title=form_fields.get("title", "Untitled Recipe"),
+            summary=form_fields.get("summary", ""),
+            name=form_fields.get("title", "Untitled Recipe"),  # Populate both naming conventions
+            description=form_fields.get("summary", ""),
+            ingredients=form_fields.get("ingredients", ""),
+            instructions=form_fields.get("instructions", ""),
+            prep_time_minutes=form_fields.get("prep_time_minutes"),
+            cook_time_minutes=form_fields.get("cook_time_minutes"),
+            servings=form_fields.get("servings"),
+            is_published=True,
+        )
+        
+        # Update draft status
+        draft.status = RecipeDraftSuggestion.Status.PUBLISHED
+        draft.published_recipe = recipe
+        draft.save()
+        
+        recipe_url = reverse("recipe_detail", kwargs={"pk": recipe.pk})
+        
+        return {
+            "recipe": recipe,
+            "recipe_url": recipe_url,
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to publish recipe: {e}")
+        draft.status = RecipeDraftSuggestion.Status.FAILED
+        draft.save()
+        raise CrewServiceError(f"Failed to publish recipe: {str(e)}")
+
