@@ -3,13 +3,18 @@ Views for the AI Chef chatbot feature.
 
 Provides:
 - GET /ai/chef/ - Render chat UI
-- POST /ai/chef/message/ - Process user message, run crew
+- POST /ai/chef/message/ - Process user message, generate recipe
 - POST /ai/chef/publish/<draft_id>/ - Publish draft to Recipe
+- GET /ai/chef/diagnostic/ - Performance diagnostic endpoint (DEBUG only)
+
+Performance optimized: Uses fast_recipe_service for ~10s response times.
 """
 
 import json
 import logging
+import time
 
+from django.conf import settings as django_settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -18,8 +23,24 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
 from recipes.models import RecipeDraftSuggestion, ChatMessage
-from recipes.ai.crew_service import run_suggestion, publish_from_draft, CrewServiceError
 from recipes.ai.config import keys_configured
+
+# Use fast service by default (fallback to crew_service if needed)
+try:
+    from recipes.ai.fast_recipe_service import suggest_recipe, FastRecipeError
+    USE_FAST_SERVICE = True
+except ImportError:
+    USE_FAST_SERVICE = False
+
+# Import crew_service for fallback and publishing
+try:
+    from recipes.ai.crew_service import run_suggestion, CrewServiceError
+except ImportError:
+    run_suggestion = None
+    CrewServiceError = Exception
+
+# Publisher is always from crew_service (it's pure Python, no LLM)
+from recipes.ai.crew_service import publish_from_draft, CrewServiceError as PublishError
 
 logger = logging.getLogger(__name__)
 
@@ -118,16 +139,30 @@ def ai_chatbot_message(request):
     )
     
     try:
-        # Run the crew workflow
-        result = run_suggestion(prompt, dietary_requirements)
+        # Use fast service or fallback to crew service
+        if USE_FAST_SERVICE:
+            result = suggest_recipe(prompt, dietary_requirements)
+            display_text = result.get("display_text", "")
+            form_fields = result.get("form_fields", {})
+            metadata = result.get("metadata", {})
+            
+            # Log performance
+            timing_ms = metadata.get("timing_ms", 0)
+            cache_hit = metadata.get("cache_hit", False)
+            logger.info(f"Recipe generated in {timing_ms:.0f}ms (cache_hit={cache_hit})")
+        else:
+            # Fallback to old crew service
+            result = run_suggestion(prompt, dietary_requirements)
+            display_text = result.get("assistant_display", "")
+            form_fields = result.get("form_fields", {})
         
         # Create draft suggestion
         draft = RecipeDraftSuggestion.objects.create(
             user=user,
             prompt=prompt,
             dietary_requirements=dietary_requirements,
-            draft_payload=result.get("form_fields", {}),
-            assistant_display=result.get("assistant_display", ""),
+            draft_payload=form_fields,
+            assistant_display=display_text,
             status=RecipeDraftSuggestion.Status.DRAFT,
         )
         
@@ -135,29 +170,40 @@ def ai_chatbot_message(request):
         assistant_message = ChatMessage.objects.create(
             user=user,
             role=ChatMessage.Role.ASSISTANT,
-            content=result.get("assistant_display", "I generated a recipe for you."),
+            content=display_text or "I generated a recipe for you.",
             related_draft=draft,
         )
         
+        response_data = {
+            "success": True,
+            "message": {
+                "role": "assistant",
+                "content": display_text,
+            },
+            "draft": {
+                "id": draft.id,
+                "title": form_fields.get("title", "Recipe"),
+                "publish_url": reverse("ai_chatbot_publish", kwargs={"draft_id": draft.id}),
+            },
+        }
+        
+        # Include metadata for debugging (only in DEBUG mode)
+        from django.conf import settings
+        if getattr(settings, 'DEBUG', False) and USE_FAST_SERVICE:
+            response_data["_debug"] = {
+                "timing_ms": metadata.get("timing_ms"),
+                "cache_hit": metadata.get("cache_hit"),
+                "used_retrieval": metadata.get("used_retrieval"),
+            }
+        
         if is_json_request:
-            return JsonResponse({
-                "success": True,
-                "message": {
-                    "role": "assistant",
-                    "content": result.get("assistant_display", ""),
-                },
-                "draft": {
-                    "id": draft.id,
-                    "title": result.get("form_fields", {}).get("title", "Recipe"),
-                    "publish_url": reverse("ai_chatbot_publish", kwargs={"draft_id": draft.id}),
-                },
-            })
+            return JsonResponse(response_data)
         else:
             messages.success(request, "Recipe suggestion generated! Review it below.")
             return redirect("ai_chatbot")
         
-    except CrewServiceError as e:
-        logger.error(f"Crew service error: {e}")
+    except (FastRecipeError if USE_FAST_SERVICE else CrewServiceError) as e:
+        logger.error(f"Recipe service error: {e}")
         
         # Store error as assistant message
         ChatMessage.objects.create(
@@ -220,11 +266,12 @@ def ai_chatbot_publish(request, draft_id):
     try:
         result = publish_from_draft(draft, user)
         
-        # Add success message to chat
+        # Add success message to chat with clickable link
+        recipe_url = result['recipe_url']
         ChatMessage.objects.create(
             user=user,
             role=ChatMessage.Role.ASSISTANT,
-            content=f"🎉 Recipe published successfully! View it here: {result['recipe_url']}",
+            content=f'🎉 Recipe published successfully! View it <a href="{recipe_url}" class="fw-bold">here</a>.',
             related_draft=draft,
         )
         
@@ -239,7 +286,7 @@ def ai_chatbot_publish(request, draft_id):
             messages.success(request, "Your recipe has been published!")
             return redirect("recipe_detail", pk=result["recipe"].id)
     
-    except CrewServiceError as e:
+    except PublishError as e:
         logger.error(f"Publish error: {e}")
         
         if is_json_request:
@@ -283,4 +330,122 @@ def ai_chatbot_clear(request):
     else:
         messages.info(request, "Chat history cleared.")
         return redirect("ai_chatbot")
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def ai_diagnostic(request):
+    """
+    Performance diagnostic endpoint for the AI service.
+    
+    GET /ai/chef/diagnostic/ - Show diagnostic form
+    POST /ai/chef/diagnostic/ - Run diagnostic and return timing data
+    
+    Only available in DEBUG mode.
+    """
+    if not getattr(django_settings, 'DEBUG', False):
+        return JsonResponse({"error": "Diagnostic endpoint only available in DEBUG mode"}, status=403)
+    
+    if request.method == "GET":
+        # Return a simple diagnostic form
+        return JsonResponse({
+            "message": "AI Diagnostic Endpoint",
+            "usage": "POST to this endpoint with JSON: {\"prompt\": \"test prompt\", \"dietary\": \"optional\"}",
+            "service_type": "fast_recipe_service" if USE_FAST_SERVICE else "crew_service (slow)",
+            "api_configured": keys_configured(),
+        })
+    
+    # POST - Run diagnostic
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        data = {}
+    
+    prompt = data.get("prompt", "simple pasta recipe")
+    dietary = data.get("dietary", "")
+    skip_cache = data.get("skip_cache", True)  # Default to skip cache for accurate timing
+    
+    if not keys_configured():
+        return JsonResponse({
+            "error": "API keys not configured",
+            "service_type": "fast_recipe_service" if USE_FAST_SERVICE else "crew_service",
+        }, status=503)
+    
+    start_time = time.perf_counter()
+    
+    try:
+        if USE_FAST_SERVICE:
+            result = suggest_recipe(prompt, dietary, skip_cache=skip_cache)
+            total_time = (time.perf_counter() - start_time) * 1000
+            
+            return JsonResponse({
+                "success": True,
+                "service": "fast_recipe_service",
+                "timing_ms": round(total_time, 1),
+                "profile": result.get("metadata", {}).get("profile", {}),
+                "cache_hit": result.get("metadata", {}).get("cache_hit", False),
+                "used_retrieval": result.get("metadata", {}).get("used_retrieval", False),
+                "recipe_title": result.get("form_fields", {}).get("title", "Unknown"),
+                "analysis": _analyze_timing(result.get("metadata", {}).get("profile", {})),
+            })
+        else:
+            # Old crew service
+            result = run_suggestion(prompt, dietary)
+            total_time = (time.perf_counter() - start_time) * 1000
+            
+            return JsonResponse({
+                "success": True,
+                "service": "crew_service",
+                "timing_ms": round(total_time, 1),
+                "warning": "Using slow crew_service. fast_recipe_service should be used instead.",
+            })
+            
+    except Exception as e:
+        total_time = (time.perf_counter() - start_time) * 1000
+        logger.exception(f"Diagnostic failed: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": str(e),
+            "timing_ms": round(total_time, 1),
+            "service": "fast_recipe_service" if USE_FAST_SERVICE else "crew_service",
+        }, status=500)
+
+
+def _analyze_timing(profile: dict) -> dict:
+    """Analyze timing profile and provide recommendations."""
+    stages = profile.get("stages", [])
+    total_ms = profile.get("total_ms", 0)
+    counters = profile.get("counters", {})
+    
+    analysis = {
+        "total_ms": total_ms,
+        "status": "GOOD" if total_ms < 15000 else ("OK" if total_ms < 25000 else "SLOW"),
+        "recommendations": [],
+    }
+    
+    # Check LLM calls
+    llm_calls = counters.get("llm_calls", 0)
+    if llm_calls > 1:
+        analysis["recommendations"].append(
+            f"WARNING: {llm_calls} LLM calls detected. Should be 1 maximum."
+        )
+    
+    # Find slow stages
+    for stage in stages:
+        if stage["duration_ms"] > 10000:
+            analysis["recommendations"].append(
+                f"SLOW: {stage['name']} took {stage['duration_ms']:.0f}ms"
+            )
+    
+    # Check serper
+    serper_stage = next((s for s in stages if "serper" in s["name"]), None)
+    if serper_stage and serper_stage["duration_ms"] > 4000:
+        analysis["recommendations"].append(
+            "Serper timeout may be too long or not working"
+        )
+    
+    if not analysis["recommendations"]:
+        analysis["recommendations"].append("All stages within expected limits")
+    
+    return analysis
 

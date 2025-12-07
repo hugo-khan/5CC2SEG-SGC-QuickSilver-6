@@ -1,13 +1,18 @@
 """
 Tests for the AI Chatbot views.
 
-All tests mock the crew_service to avoid external API calls.
+All tests mock the fast_recipe_service (and crew_service fallback) to avoid external API calls.
+
+Updated to verify:
+- Fast service is used by default
+- Profile metadata is passed through
+- Diagnostic endpoint works
 """
 
 import json
 from unittest.mock import patch, MagicMock
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from recipes.models import User, Recipe, RecipeDraftSuggestion, ChatMessage
@@ -138,13 +143,13 @@ class AIChatbotMessageViewTest(AIChatbotViewTestCase):
         data = response.json()
         self.assertIn('API keys', data['error'])
 
-    @patch('recipes.views.ai_chatbot_view.run_suggestion')
+    @patch('recipes.views.ai_chatbot_view.suggest_recipe')
     @patch('recipes.views.ai_chatbot_view.keys_configured')
-    def test_post_message_creates_draft_and_messages(self, mock_keys, mock_run):
+    def test_post_message_creates_draft_and_messages(self, mock_keys, mock_suggest):
         """Successful message creates draft and chat messages."""
         mock_keys.return_value = True
-        mock_run.return_value = {
-            'assistant_display': 'Here is your pasta recipe!',
+        mock_suggest.return_value = {
+            'display_text': 'Here is your pasta recipe!',
             'form_fields': {
                 'title': 'Pasta Carbonara',
                 'summary': 'Creamy Italian pasta',
@@ -154,7 +159,12 @@ class AIChatbotMessageViewTest(AIChatbotViewTestCase):
                 'cook_time_minutes': 20,
                 'servings': 4
             },
-            'raw': 'raw output'
+            'raw_json': {},
+            'metadata': {
+                'timing_ms': 5000,
+                'cache_hit': False,
+                'used_retrieval': True,
+            }
         }
         
         self.client.login(username='@johndoe', password='Password123')
@@ -193,14 +203,14 @@ class AIChatbotMessageViewTest(AIChatbotViewTestCase):
         assistant_msg = messages.get(role=ChatMessage.Role.ASSISTANT)
         self.assertEqual(assistant_msg.content, 'Here is your pasta recipe!')
 
-    @patch('recipes.views.ai_chatbot_view.run_suggestion')
+    @patch('recipes.views.ai_chatbot_view.suggest_recipe')
     @patch('recipes.views.ai_chatbot_view.keys_configured')
-    def test_post_message_handles_crew_error(self, mock_keys, mock_run):
-        """Crew service errors are handled gracefully."""
-        from recipes.ai.crew_service import CrewServiceError
+    def test_post_message_handles_service_error(self, mock_keys, mock_suggest):
+        """Recipe service errors are handled gracefully."""
+        from recipes.ai.fast_recipe_service import FastRecipeError
         
         mock_keys.return_value = True
-        mock_run.side_effect = CrewServiceError('API rate limit exceeded')
+        mock_suggest.side_effect = FastRecipeError('API rate limit exceeded')
         
         self.client.login(username='@johndoe', password='Password123')
         
@@ -443,13 +453,13 @@ class AIChatbotClearViewTest(AIChatbotViewTestCase):
 class AIChatbotIntegrationTest(AIChatbotViewTestCase):
     """Integration tests for the full chatbot workflow."""
 
-    @patch('recipes.views.ai_chatbot_view.run_suggestion')
+    @patch('recipes.views.ai_chatbot_view.suggest_recipe')
     @patch('recipes.views.ai_chatbot_view.keys_configured')
-    def test_full_workflow_message_to_publish(self, mock_keys, mock_run):
+    def test_full_workflow_message_to_publish(self, mock_keys, mock_suggest):
         """Test complete workflow: send message, then publish."""
         mock_keys.return_value = True
-        mock_run.return_value = {
-            'assistant_display': 'Here is your pasta recipe!',
+        mock_suggest.return_value = {
+            'display_text': 'Here is your pasta recipe!',
             'form_fields': {
                 'title': 'Pasta Carbonara',
                 'summary': 'Creamy Italian pasta',
@@ -459,7 +469,12 @@ class AIChatbotIntegrationTest(AIChatbotViewTestCase):
                 'cook_time_minutes': 20,
                 'servings': 4
             },
-            'raw': 'raw output'
+            'raw_json': {},
+            'metadata': {
+                'timing_ms': 5000,
+                'cache_hit': False,
+                'used_retrieval': True,
+            }
         }
         
         self.client.login(username='@johndoe', password='Password123')

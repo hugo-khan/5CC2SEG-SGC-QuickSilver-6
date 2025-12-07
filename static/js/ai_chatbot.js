@@ -42,9 +42,10 @@
      * Build HTML for a chat message.
      * @param {string} role - 'user' or 'assistant'
      * @param {string} content - The message content
+     * @param {boolean} allowHtml - If true, allow HTML in content (only for trusted assistant messages)
      * @returns {string} - The HTML string
      */
-    function buildMessageHTML(role, content) {
+    function buildMessageHTML(role, content, allowHtml) {
         const isUser = role === 'user';
         const bubbleClass = isUser ? 'bg-primary text-white' : 'bg-light';
         const alignClass = isUser ? 'justify-content-end' : '';
@@ -55,13 +56,16 @@
         if (!isUser) {
             header = '<div class="fw-bold text-muted small mb-1"><span class="bi-robot"></span> AI Chef</div>';
         }
+        
+        // For assistant messages, we allow HTML (for links). User content is always escaped.
+        const displayContent = (allowHtml && !isUser) ? content : escapeHtml(content);
 
         return `
             <div class="chat-message chat-message-${escapeHtml(role)} mb-3">
                 <div class="d-flex ${alignClass}">
                     <div class="message-bubble ${bubbleClass} rounded-3 p-3" style="max-width: 80%;">
                         ${header}
-                        <div class="message-content" style="white-space: pre-wrap;">${escapeHtml(content)}</div>
+                        <div class="message-content" style="white-space: pre-wrap;">${displayContent}</div>
                         <div class="${timeClass} small mt-1">${escapeHtml(time)}</div>
                     </div>
                 </div>
@@ -149,6 +153,55 @@
     }
 
     // =============================================================================
+    // Loading Status Updates
+    // =============================================================================
+
+    var loadingStartTime = null;
+    var loadingInterval = null;
+
+    var loadingMessages = [
+        { time: 0, text: "Searching for recipe ideas..." },
+        { time: 2000, text: "Analyzing ingredients and techniques..." },
+        { time: 5000, text: "Crafting your personalized recipe..." },
+        { time: 8000, text: "Adding finishing touches..." },
+        { time: 12000, text: "Almost there..." },
+    ];
+
+    function updateLoadingStatus() {
+        loadingStartTime = Date.now();
+        var statusEl = document.getElementById('loading-status');
+        
+        if (!statusEl) return;
+
+        // Clear any existing interval
+        if (loadingInterval) {
+            clearInterval(loadingInterval);
+        }
+
+        loadingInterval = setInterval(function() {
+            var elapsed = Date.now() - loadingStartTime;
+            
+            // Find the appropriate message
+            var message = loadingMessages[0].text;
+            for (var i = loadingMessages.length - 1; i >= 0; i--) {
+                if (elapsed >= loadingMessages[i].time) {
+                    message = loadingMessages[i].text;
+                    break;
+                }
+            }
+            
+            statusEl.textContent = message;
+        }, 500);
+    }
+
+    function stopLoadingStatus() {
+        if (loadingInterval) {
+            clearInterval(loadingInterval);
+            loadingInterval = null;
+        }
+    }
+
+    // =============================================================================
     // DOM Interaction (only runs in browser)
     // =============================================================================
 
@@ -188,13 +241,15 @@
                 emptyState.classList.add('d-none');
             }
 
-            // Add user message to transcript
+            // Add user message to transcript (never allow HTML in user content)
             const userContent = prompt + (dietary ? '\n\nDietary requirements: ' + dietary : '');
-            chatTranscript.insertAdjacentHTML('beforeend', buildMessageHTML('user', userContent));
+            chatTranscript.insertAdjacentHTML('beforeend', buildMessageHTML('user', userContent, false));
 
-            // Show loading indicator
+            // Show loading indicator with progress updates
             if (loadingIndicator) {
                 loadingIndicator.classList.remove('d-none');
+                // Start progress updates
+                updateLoadingStatus();
             }
 
             // Disable form
@@ -223,7 +278,8 @@
                 });
             })
             .then(function(result) {
-                // Hide loading indicator
+                // Hide loading indicator and stop status updates
+                stopLoadingStatus();
                 if (loadingIndicator) {
                     loadingIndicator.classList.add('d-none');
                 }
@@ -231,15 +287,15 @@
                 const parsed = parseDraftResponse(result.data);
 
                 if (!parsed.success) {
-                    // Add error message
+                    // Add error message (no HTML needed)
                     chatTranscript.insertAdjacentHTML('beforeend', 
-                        buildMessageHTML('assistant', 'Sorry, an error occurred: ' + (parsed.error || 'Unknown error'))
+                        buildMessageHTML('assistant', 'Sorry, an error occurred: ' + (parsed.error || 'Unknown error'), false)
                     );
                 } else {
-                    // Add assistant message
+                    // Add assistant message (recipe text, no HTML links)
                     if (parsed.message && parsed.message.content) {
                         chatTranscript.insertAdjacentHTML('beforeend', 
-                            buildMessageHTML('assistant', parsed.message.content)
+                            buildMessageHTML('assistant', parsed.message.content, false)
                         );
                     }
 
@@ -271,7 +327,8 @@
             .catch(function(error) {
                 console.error('Chat request failed:', error);
                 
-                // Hide loading indicator
+                // Hide loading indicator and stop status updates
+                stopLoadingStatus();
                 if (loadingIndicator) {
                     loadingIndicator.classList.add('d-none');
                 }

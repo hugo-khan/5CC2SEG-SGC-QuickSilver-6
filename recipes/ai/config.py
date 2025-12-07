@@ -17,20 +17,31 @@ Usage:
 
 import os
 
+# Placeholder values that indicate unconfigured keys
+_PLACEHOLDER_VALUES = {
+    "OPENAI_API_KEY",
+    "SERPER_API_KEY",
+    "PASTE_YOUR_OPENAI_API_KEY_HERE",
+    "PASTE_YOUR_SERPER_API_KEY_HERE",
+    "",
+}
+
 # =============================================================================
 # OPENAI API KEY
 # -----------------------------------------------------------------------------
+# For testing: Replace "OPENAI_API_KEY" with your actual key like "sk-..."
 OPENAI_API_KEY = os.environ.get(
     "OPENAI_API_KEY",
-    "OPENAI_API_KEY" # replace with your key
+    "OPENAI_API_KEY"  # Replace with your key
 )
 
 # =============================================================================
 # SERPER API KEY (for web search / RAG)
 # -----------------------------------------------------------------------------
+# For testing: Replace "SERPER_API_KEY" with your actual key
 SERPER_API_KEY = os.environ.get(
     "SERPER_API_KEY",
-    "SERPER_API_KEY" # replace with your key
+    "SERPER_API_KEY"  # Replace with your key
 )
 
 
@@ -42,11 +53,11 @@ def validate_keys():
     errors = []
     
     # Check if OPENAI_API_KEY is empty or still a placeholder
-    if not OPENAI_API_KEY or OPENAI_API_KEY == "PASTE_YOUR_OPENAI_API_KEY_HERE":
+    if not OPENAI_API_KEY or OPENAI_API_KEY in _PLACEHOLDER_VALUES:
         errors.append("OPENAI_API_KEY is not configured")
     
     # Check if SERPER_API_KEY is empty or still a placeholder
-    if not SERPER_API_KEY or SERPER_API_KEY == "PASTE_YOUR_SERPER_API_KEY_HERE":
+    if not SERPER_API_KEY or SERPER_API_KEY in _PLACEHOLDER_VALUES:
         errors.append("SERPER_API_KEY is not configured")
     
     return len(errors) == 0, errors

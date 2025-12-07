@@ -7,11 +7,16 @@ This module implements a 3-agent sequential workflow:
 3. Publisher Agent - Handles recipe publishing to the database
 
 All external API calls are isolated here for easy mocking in tests.
+
+NOTE: This module is being replaced by fast_recipe_service.py for better performance.
+The profiling code below helps measure where time is spent.
 """
 
 import json
 import logging
 from typing import Any
+
+from recipes.ai.profiling import profile_stage, clear_profile, log_profile_table
 
 logger = logging.getLogger(__name__)
 
@@ -59,13 +64,14 @@ def _create_recipe_web_search_tool():
         Search the web for recipe information using Serper API.
         Use this to find recipe ideas, ingredients, and cooking instructions.
         """
-        try:
-            serper_tool = SerperDevTool(api_key=SERPER_API_KEY)
-            results = serper_tool.run(search_query=query)
-            return results
-        except Exception as e:
-            logger.error(f"Serper search failed: {e}")
-            return f"Search failed: {str(e)}"
+        with profile_stage("serper_search", {"query": query[:50]}):
+            try:
+                serper_tool = SerperDevTool(api_key=SERPER_API_KEY)
+                results = serper_tool.run(search_query=query)
+                return results
+            except Exception as e:
+                logger.error(f"Serper search failed: {e}")
+                return f"Search failed: {str(e)}"
     
     return recipe_web_search
 
@@ -281,12 +287,17 @@ def run_suggestion(prompt: str, dietary_requirements: str = "") -> dict[str, Any
             - assistant_display: Formatted response for chat
             - form_fields: Dict matching Recipe form fields
             - raw: Raw output from the crew
+            - _profile: Profiling data (if DEBUG)
     
     Raises:
         CrewServiceError: If the workflow fails or keys are not configured
     """
     import os
+    from django.conf import settings
     from recipes.ai.config import keys_configured, OPENAI_API_KEY, SERPER_API_KEY
+    
+    # Clear any previous profiling data
+    clear_profile()
     
     if not keys_configured():
         raise CrewServiceError(
@@ -296,36 +307,43 @@ def run_suggestion(prompt: str, dietary_requirements: str = "") -> dict[str, Any
     
     # Set environment variables for CrewAI/litellm to pick up
     # This is necessary because litellm reads directly from os.environ
-    os.environ["OPENAI_API_KEY"] = "OPENAI_API_KEY"
-    os.environ["SERPER_API_KEY"] = "SERPER_API_KEY"
+    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+    os.environ["SERPER_API_KEY"] = SERPER_API_KEY
     
     try:
-        # Get crewai components
-        _, _, Crew, Process, _, _ = _get_crewai_components()
+        with profile_stage("crew_setup"):
+            # Get crewai components
+            _, _, Crew, Process, _, _ = _get_crewai_components()
+            
+            # Create agents
+            researcher = create_recipe_researcher()
+            formatter = create_formatter_agent()
+            
+            # Create tasks
+            research_task = create_research_task(prompt, dietary_requirements, researcher)
+            format_task = create_format_task(formatter)
+            
+            # Create crew
+            crew = Crew(
+                agents=[researcher, formatter],
+                tasks=[research_task, format_task],
+                process=Process.sequential,
+                verbose=True,
+            )
         
-        # Create agents
-        researcher = create_recipe_researcher()
-        formatter = create_formatter_agent()
+        with profile_stage("crew_kickoff_total"):
+            result = crew.kickoff()
         
-        # Create tasks
-        research_task = create_research_task(prompt, dietary_requirements, researcher)
-        format_task = create_format_task(formatter)
+        with profile_stage("parse_output"):
+            # Parse the result
+            raw_output = str(result)
+            
+            # Try to extract JSON from the output
+            parsed = _parse_crew_output(raw_output)
         
-        # Create and run crew
-        crew = Crew(
-            agents=[researcher, formatter],
-            tasks=[research_task, format_task],
-            process=Process.sequential,
-            verbose=True,
-        )
-        
-        result = crew.kickoff()
-        
-        # Parse the result
-        raw_output = str(result)
-        
-        # Try to extract JSON from the output
-        parsed = _parse_crew_output(raw_output)
+        # Log profiling summary
+        if getattr(settings, 'DEBUG', False):
+            logger.info(log_profile_table())
         
         return {
             "assistant_display": parsed.get("assistant_display", raw_output),

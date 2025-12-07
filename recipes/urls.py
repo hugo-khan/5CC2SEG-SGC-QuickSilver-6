@@ -15,6 +15,7 @@ from recipes.views.ai_chatbot_view import (
     ai_chatbot_message,
     ai_chatbot_publish,
     ai_chatbot_clear,
+    ai_diagnostic,
 )
 
 urlpatterns = [
@@ -31,6 +32,7 @@ urlpatterns = [
     path("ai/chef/message/", ai_chatbot_message, name="ai_chatbot_message"),
     path("ai/chef/publish/<int:draft_id>/", ai_chatbot_publish, name="ai_chatbot_publish"),
     path("ai/chef/clear/", ai_chatbot_clear, name="ai_chatbot_clear"),
+    path("ai/chef/diagnostic/", ai_diagnostic, name="ai_diagnostic"),
 ]
 
 

@@ -51,7 +51,7 @@
                       <span class="bi-robot"></span> AI Chef
                     </div>
                     {% endif %}
-                    <div class="message-content" style="white-space: pre-wrap;">{{ msg.content }}</div>
+                    <div class="message-content" style="white-space: pre-wrap;">{% if msg.role == 'assistant' %}{{ msg.content|safe }}{% else %}{{ msg.content }}{% endif %}</div>
                     <div class="text-{% if msg.role == 'user' %}white-50{% else %}muted{% endif %} small mt-1">
                       {{ msg.created_at|date:"g:i A" }}
                     </div>
@@ -70,11 +70,20 @@
           </div>
 
           <!-- Loading Indicator (hidden by default) -->
-          <div id="loading-indicator" class="text-center py-3 d-none">
-            <div class="spinner-border text-primary" role="status">
+          <div id="loading-indicator" class="text-center py-4 d-none">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
               <span class="visually-hidden">Generating recipe...</span>
             </div>
-            <p class="text-muted mt-2">Researching and creating your recipe...</p>
+            <p class="text-muted mt-3 mb-1">
+              <strong>Creating your recipe...</strong>
+            </p>
+            <p class="text-muted small" id="loading-status">
+              This typically takes 8-12 seconds
+            </p>
+            <div class="progress mt-2 mx-auto" style="width: 200px; height: 4px;">
+              <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                   role="progressbar" style="width: 100%"></div>
+            </div>
           </div>
 
           <!-- Publish Button (shown only when draft exists) -->
