@@ -31,6 +31,7 @@ from recipes.views.password_view import PasswordView
 from recipes.views.profile_view import profile  # Display profile
 from recipes.views.recipe_search_view import recipe_search
 from recipes.views.sign_up_view import SignUpView
+from recipes.views.comment_report_view import CommentReport
 
 
 urlpatterns = [

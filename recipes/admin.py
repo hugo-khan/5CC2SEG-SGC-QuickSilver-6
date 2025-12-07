@@ -1,5 +1,5 @@
 from django.contrib import admin
-from recipes.models import Follow, Recipe, User
+from recipes.models import Follow, Recipe, User, CommentReport, Comment
 
 
 @admin.register(Recipe)
@@ -46,3 +46,16 @@ class FollowAdmin(admin.ModelAdmin):
 class UserAdmin(admin.ModelAdmin):
     list_display = ("username", "email", "first_name", "last_name")
     search_fields = ("username", "email", "first_name", "last_name")
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'text', 'created_at')
+    search_fields = ('text','user__username')
+    ordering = ('created_at',)
+
+@admin.register(CommentReport)
+class CommentReportAdmin(admin.ModelAdmin):
+    list_display = ('id','comment', 'created_at','reporter') # for the comments
+    search_fields = ('reporter__username', 'reason', 'comment__text')
+    ordering = ('created_at',)
+

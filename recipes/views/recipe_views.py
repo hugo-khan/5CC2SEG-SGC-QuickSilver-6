@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from recipes.forms import CommentReportForm
 
 from recipes.forms import RecipeForm, CommentForm
 from recipes.models import Comment, Follow, Recipe, SavedRecipe, User

@@ -4,6 +4,7 @@ from .follow import Follow
 from .saved_recipes import SavedRecipe
 from .comment import Comment
 from .like import Like
+from .comment_report import CommentReport
 
 __all__ = [
     "User",
@@ -12,4 +13,5 @@ __all__ = [
     "SavedRecipe",
     "Comment",
     "Like",
+    "CommentReport",
 ]
