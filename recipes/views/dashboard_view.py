@@ -35,6 +35,11 @@ def browse_recipes(request):
 
     # Normal GET request: show all recipes with saved-state information
     recipes = Recipe.objects.all().select_related("author")
+    my_recipes = (
+        Recipe.objects.filter(author=current_user)
+        .select_related("author")
+        .order_by("-created_at")
+    )
     saved_recipe_ids = SavedRecipe.objects.filter(user=current_user).values_list(
         "recipe_id", flat=True
     )
@@ -42,6 +47,7 @@ def browse_recipes(request):
     context = {
         "user": current_user,
         "recipes": recipes,
+        "my_recipes": my_recipes,
         "saved_recipe_ids": list(saved_recipe_ids),
     }
     return render(request, "dashboard.html", context)
