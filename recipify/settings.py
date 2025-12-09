@@ -63,7 +63,9 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',  # Must be before AdminAccessMiddleware
+    'recipes.middleware.AdminAccessMiddleware',  # Block non-admins from /admin/
+    'recipes.middleware_cache_control.NoCacheMiddleware',  # Prevent back button after logout
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -167,6 +169,7 @@ ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_ADAPTER = 'recipes.adapters.RecipeAccountAdapter'  # Custom adapter for unique usernames
 
 # Redirect URL when logged in
 REDIRECT_URL_WHEN_LOGGED_IN = 'dashboard'

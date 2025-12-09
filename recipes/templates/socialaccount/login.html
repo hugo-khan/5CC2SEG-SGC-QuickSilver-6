@@ -21,8 +21,10 @@
         <div class="card shadow-sm border-0 auth-panel">
           <div class="card-body p-4 p-lg-5">
             <div class="text-center mb-4">
-              <span class="badge rounded-pill bg-light text-primary mb-2">Google sign-in</span>
-              <p class="mb-0 text-muted">
+              <span class="badge rounded-pill bg-warning text-dark mb-2">
+                <i class="bi bi-google me-1"></i>Google sign-in
+              </span>
+              <p class="mb-0 text-muted mt-3">
                 Confirm below to be redirected to Google and finish signing in.
               </p>
             </div>
@@ -48,6 +50,11 @@
                 <span class="oauth-icon">G</span>
                 Continue to Google
               </button>
+              <div class="text-center mt-3">
+                <a href="{% url 'log_in' %}" class="text-muted small">
+                  <i class="bi bi-arrow-left me-1"></i>Back to regular login
+                </a>
+              </div>
             </form>
             <p class="text-center text-muted small mb-0 mt-4">
               Prefer not to use Google? <a href="{% url 'log_in' %}">Sign in with username and password instead.</a>

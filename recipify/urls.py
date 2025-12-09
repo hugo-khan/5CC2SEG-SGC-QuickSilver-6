@@ -19,6 +19,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from recipes.views.admin_login_view import AdminLoginView
 from recipes.views.author_recipes_view import author_recipes
 from recipes.views.comment_view import AddCommentView
 from recipes.views.dashboard_view import dashboard
@@ -41,6 +42,7 @@ urlpatterns = [
 
     # Auth & profile
     path("log_in/", LogInView.as_view(), name="log_in"),
+    path("admin/login/", AdminLoginView.as_view(), name="admin_login"),
     path("log_out/", log_out, name="log_out"),
     path("password/", PasswordView.as_view(), name="password"),
     path("profile/", profile, name="profile"),  # Display profile
