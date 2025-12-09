@@ -1710,6 +1710,17 @@ html {
   color: var(--white);
 }
 
+.table thead th {
+  color: var(--white) !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+  padding: 1rem;
+  border: none;
+  font-family: var(--font-sans);
+}
+
 .table tbody tr {
   transition: all 0.3s ease;
 }
