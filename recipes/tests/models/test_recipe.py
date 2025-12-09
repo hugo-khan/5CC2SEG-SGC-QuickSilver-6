@@ -29,5 +29,3 @@ class RecipeModelTest(TestCase):
             cook_time_minutes=10,
         )
         self.assertEqual(recipe.total_time_minutes, 15)
-
-

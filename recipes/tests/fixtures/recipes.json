@@ -1,0 +1,77 @@
+[
+  {
+    "model": "recipes.recipe",
+    "pk": 1,
+    "fields": {
+      "title": "Chocolate Cake",
+      "description": "Delicious chocolate cake",
+      "instructions": "Mix ingredients and bake",
+      "ingredients": "flour,sugar,cocoa powder,butter,eggs",
+      "prep_time_minutes": 15,
+      "cook_time_minutes": 35,
+      "servings": 8,
+      "is_published": true,
+      "author": 2
+    }
+  },
+  {
+    "model": "recipes.recipe",
+    "pk": 2,
+    "fields": {
+      "title": "Vanilla Cupcakes",
+      "description": "Light vanilla cupcakes",
+      "instructions": "Mix, bake, cool",
+      "ingredients": "flour,sugar,butter,eggs,vanilla extract",
+      "prep_time_minutes": 10,
+      "cook_time_minutes": 20,
+      "servings": 12,
+      "is_published": true,
+      "author": 3
+    }
+  },
+  {
+    "model": "recipes.recipe",
+    "pk": 3,
+    "fields": {
+      "title": "Strawberry Smoothie",
+      "description": "Fresh strawberry smoothie",
+      "instructions": "Blend all ingredients",
+      "ingredients": "strawberries,milk,honey,ice",
+      "prep_time_minutes": 5,
+      "cook_time_minutes": 0,
+      "servings": 2,
+      "is_published": true,
+      "author": 4
+    }
+  },
+  {
+    "model": "recipes.recipe",
+    "pk": 4,
+    "fields": {
+      "title": "Banana Pancakes",
+      "description": "Fluffy banana pancakes",
+      "instructions": "Mix ingredients and fry",
+      "ingredients": "flour,eggs,milk,bananas,butter",
+      "prep_time_minutes": 10,
+      "cook_time_minutes": 15,
+      "servings": 4,
+      "is_published": true,
+      "author": 2
+    }
+  },
+  {
+    "model": "recipes.recipe",
+    "pk": 5,
+    "fields": {
+      "title": "Fruit Salad",
+      "description": "Healthy fruit salad",
+      "instructions": "Chop and mix all fruits",
+      "ingredients": "strawberries,bananas,apples,oranges,honey",
+      "prep_time_minutes": 10,
+      "cook_time_minutes": 0,
+      "servings": 3,
+      "is_published": true,
+      "author": 3
+    }
+  }
+]
