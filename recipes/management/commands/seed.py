@@ -3,7 +3,7 @@ Management command to seed the database with demo data.
 """
 
 from faker import Faker
-from random import randint, random, choice
+from random import randint, choice
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from recipes.models import Recipe
@@ -20,39 +20,88 @@ user_fixtures = [
 recipe_fixtures = [
     {
         'title': 'Classic Spaghetti Carbonara',
+        'name': 'Classic Spaghetti Carbonara',
+        'summary': 'Creamy pasta with pancetta and parmesan.',
+        'description': 'A rich and comforting pasta made with eggs, parmesan, and crispy pancetta.',
         'ingredients': 'spaghetti, eggs, pancetta, parmesan cheese, black pepper, salt',
         'instructions': 'Cook spaghetti. Mix eggs with cheese. Cook pancetta. Combine everything while hot.',
         'cooking_time': 20,
-        'difficulty': 'medium'
+        'difficulty': 'medium',
+        'dietary_requirement': 'none',
+        'popularity': 90,
     },
     {
         'title': 'Vegetable Stir Fry',
+        'name': 'Vegetable Stir Fry',
+        'summary': 'Colourful veggies in a quick soy-ginger sauce.',
+        'description': 'A fast midweek stir fry with crisp vegetables and a savory soy-ginger glaze.',
         'ingredients': 'bell peppers, broccoli, carrots, soy sauce, garlic, ginger, rice',
         'instructions': 'Chop vegetables. Stir fry with garlic and ginger. Add soy sauce. Serve with rice.',
         'cooking_time': 15,
-        'difficulty': 'easy'
+        'difficulty': 'easy',
+        'dietary_requirement': 'vegan',
+        'popularity': 75,
     },
     {
         'title': 'Chocolate Chip Cookies',
+        'name': 'Chocolate Chip Cookies',
+        'summary': 'Chewy cookies packed with chocolate chips.',
+        'description': 'Buttery, chewy cookies dotted with plenty of chocolate chips and a hint of vanilla.',
         'ingredients': 'flour, butter, sugar, eggs, chocolate chips, vanilla extract, baking soda',
         'instructions': 'Cream butter and sugar. Add eggs and vanilla. Mix in dry ingredients. Bake at 350°F for 10-12 minutes.',
         'cooking_time': 25,
-        'difficulty': 'easy'
+        'difficulty': 'easy',
+        'dietary_requirement': 'nut_free',
+        'popularity': 60,
     },
     {
         'title': 'Beef Tacos',
+        'name': 'Beef Tacos',
+        'summary': 'Seasoned beef tucked into crunchy shells.',
+        'description': 'Taco night classic with spiced ground beef, crisp lettuce, and melty cheese.',
         'ingredients': 'ground beef, taco shells, lettuce, tomato, cheese, sour cream, taco seasoning',
         'instructions': 'Cook beef with seasoning. Warm taco shells. Assemble with toppings.',
         'cooking_time': 20,
-        'difficulty': 'easy'
+        'difficulty': 'easy',
+        'dietary_requirement': 'dairy_free',
+        'popularity': 85,
     },
     {
         'title': 'Chicken Curry',
+        'name': 'Chicken Curry',
+        'summary': 'Creamy curry with tender chicken pieces.',
+        'description': 'A mild curry simmered with coconut milk, aromatic spices, and juicy chicken.',
         'ingredients': 'chicken, curry powder, coconut milk, onions, garlic, ginger, rice',
         'instructions': 'Sauté onions, garlic, and ginger. Add chicken and curry powder. Pour in coconut milk and simmer. Serve with rice.',
         'cooking_time': 40,
-        'difficulty': 'medium'
-    }
+        'difficulty': 'medium',
+        'dietary_requirement': 'gluten_free',
+        'popularity': 70,
+    },
+    {
+        'title': 'Halloumi Power Salad',
+        'name': 'Halloumi Power Salad',
+        'summary': 'Hearty salad with grilled halloumi and grains.',
+        'description': 'A filling bowl with chewy grains, roasted veg, and salty grilled halloumi.',
+        'ingredients': 'halloumi, quinoa, roasted vegetables, spinach, lemon dressing',
+        'instructions': 'Cook quinoa. Roast vegetables. Grill halloumi. Toss with spinach and dressing.',
+        'cooking_time': 30,
+        'difficulty': 'easy',
+        'dietary_requirement': 'vegetarian',
+        'popularity': 65,
+    },
+    {
+        'title': 'Crunchy Peanut Satay Noodles',
+        'name': 'Crunchy Peanut Satay Noodles',
+        'summary': 'Nutty noodles with crisp veggies and tofu.',
+        'description': 'Tofu and vegetables tossed in a creamy peanut satay sauce over noodles.',
+        'ingredients': 'rice noodles, tofu, peanut butter, soy sauce, lime, vegetables',
+        'instructions': 'Cook noodles. Stir-fry tofu and veg. Whisk satay sauce and combine.',
+        'cooking_time': 25,
+        'difficulty': 'medium',
+        'dietary_requirement': 'none',
+        'popularity': 55,
+    },
 ]
 
 
@@ -195,10 +244,18 @@ class Command(BaseCommand):
                 
         recipe_data = {
             'title': title,
+            'name': title,
+            'summary': self.faker.sentence(nb_words=8),
+            'description': ' '.join(self.faker.sentences(nb=2)),
             'ingredients': ', '.join(self.faker.words(nb=randint(5, 10))),
             'instructions': '. '.join(self.faker.sentences(nb=3)),
             'cooking_time': randint(10, 60),
-            'difficulty': choice(['easy', 'medium', 'hard'])
+            'difficulty': choice(['easy', 'medium', 'hard']),
+            'dietary_requirement': choice([opt[0] for opt in Recipe.DIETARY_CHOICES]),
+            'popularity': randint(20, 100),
+            'prep_time_minutes': randint(5, 20),
+            'cook_time_minutes': randint(10, 45),
+            'servings': choice([2, 4, 6]),
         }
         self.try_create_recipe(recipe_data, users)
 
@@ -221,10 +278,18 @@ class Command(BaseCommand):
         """Create a recipe with the given data."""
         Recipe.objects.create(
             title=data["title"],
+            name=data.get("name", data["title"]),
+            summary=data.get("summary", data["title"]),
+            description=data.get("description", data["instructions"]),
             ingredients=data["ingredients"],
             instructions=data.get("instructions", ""),
             cooking_time=data["cooking_time"],
             difficulty=data["difficulty"],
+            dietary_requirement=data.get("dietary_requirement", "none"),
+            popularity=data.get("popularity", randint(10, 95)),
+            prep_time_minutes=data.get("prep_time_minutes"),
+            cook_time_minutes=data.get("cook_time_minutes"),
+            servings=data.get("servings"),
             author=created_by,
         )
         self.stdout.write(

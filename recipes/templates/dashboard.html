@@ -9,10 +9,49 @@
     <a class="btn btn-primary" href="{% url 'recipe_create' %}">Publish recipe</a>
   </div>
   
-  <div class="recipe-card">
+  <div class="mb-3">
+    <label for="browse-switcher" class="form-label">View</label>
+    <select id="browse-switcher" class="form-select" aria-label="Browse view selector">
+      <option value="all" selected>All recipes</option>
+      <option value="mine">My recipes</option>
+    </select>
+  </div>
+
+  <div id="all-recipes-panel" class="recipe-card">
     <div class="card-body p-0">
       {% include 'partials/profile_tabs/recipe_table.html' with recipes=recipes saved_recipe_ids=saved_recipe_ids %}
     </div>
   </div>
+
+  <div id="my-recipes-panel" class="recipe-card" style="display:none;">
+    <div class="card-body p-0">
+      {% if my_recipes %}
+        {% include 'partials/profile_tabs/recipe_table.html' with recipes=my_recipes saved_recipe_ids=saved_recipe_ids %}
+      {% else %}
+        <div class="p-3 text-muted">You haven't published any recipes yet.</div>
+      {% endif %}
+    </div>
+  </div>
 </div>
+
+<script>
+  (function() {
+    const select = document.getElementById('browse-switcher');
+    const panels = {
+      all: document.getElementById('all-recipes-panel'),
+      mine: document.getElementById('my-recipes-panel'),
+    };
+
+    if (!select || !panels.all || !panels.mine) return;
+
+    const togglePanels = (value) => {
+      Object.entries(panels).forEach(([key, panel]) => {
+        panel.style.display = key === value ? 'block' : 'none';
+      });
+    };
+
+    togglePanels(select.value);
+    select.addEventListener('change', (e) => togglePanels(e.target.value));
+  })();
+</script>
 {% endblock %}

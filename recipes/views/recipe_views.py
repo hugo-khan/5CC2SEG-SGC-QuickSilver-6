@@ -20,6 +20,25 @@ class RecipeListView(ListView):
     def get_queryset(self):
         return Recipe.objects.filter(is_published=True).select_related("author")
 
+    def get_context_data(self, **kwargs):
+        """
+        Include the requesting user's recipes so the browse page can show
+        both personal and global lists side by side.
+        """
+
+        context = super().get_context_data(**kwargs)
+
+        if self.request.user.is_authenticated:
+            context["my_recipes"] = (
+                Recipe.objects.filter(author=self.request.user, is_published=True)
+                .select_related("author")
+                .order_by("-created_at")
+            )
+        else:
+            context["my_recipes"] = []
+
+        return context
+
 
 class RecipeDetailView(DetailView):
     """Display a single recipe."""
@@ -236,4 +255,3 @@ def toggle_save_recipe(request, pk):
     if referer:
         return redirect(referer)
     return redirect("recipe_detail", pk=pk)
-
