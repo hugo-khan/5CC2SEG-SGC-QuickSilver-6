@@ -8,6 +8,41 @@
     <h1>Browse Recipes</h1>
     <a class="btn btn-primary" href="{% url 'recipe_create' %}">Publish recipe</a>
   </div>
+    
+  <!-- adding filtering option for ingredients -->
+  <!-- Ingredient Filter -->
+  <form method="get" class="mb-4 p-3 border rounded bg-light">
+    <label class="form-label fw-bold">Ingredients</label>
+
+    <div class="dropdown w-100">
+        <button class="btn btn-outline-secondary dropdown-toggle w-100 text-start"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            Select Ingredients
+        </button>
+
+        <div class="dropdown-menu p-3"
+             style="max-height: 250px; overflow-y: auto; width: 100%;">
+            {% for value, label in form.ingredients.field.choices %}
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="ingredients"
+                           value="{{ value }}"
+                           id="dropdown_ing_{{ forloop.counter }}"
+                           {% if value in request.GET.getlist('ingredients') %}checked{% endif %}>
+                    <label class="form-check-label" for="dropdown_ing_{{ forloop.counter }}">
+                        {{ label }}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Apply Filter</button>
+  </form>
+
   
   <div class="recipe-card">
     <div class="card-body p-0">
