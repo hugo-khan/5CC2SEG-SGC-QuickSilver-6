@@ -7,12 +7,13 @@ from recipes.views import (
     RecipeUpdateView,
     follow_user,
     unfollow_user,
-    comment_report_view
-
+    comment_report_view,
+    reported_comments_view
 )
 from recipes.views.comment_report_view import report_comment
 from recipes.views.dashboard_view import browse_recipes
 from recipes.views.recipe_views import toggle_save_recipe
+from recipes.views.reported_comments_view import reported_comments_view, delete_reported_comment
 
 urlpatterns = [
     path("recipes/", browse_recipes, name="recipe_list"),
@@ -24,6 +25,7 @@ urlpatterns = [
     path("follow/<int:user_id>/", follow_user, name="follow_user"),
     path("unfollow/<int:user_id>/", unfollow_user, name="unfollow_user"),
     path("comments/report/",report_comment, name="report_comments"),
+    path("admin/reported-comments/",reported_comments_view, name="reported_comments"),
     ]
 
 
