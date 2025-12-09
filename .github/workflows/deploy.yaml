@@ -14,12 +14,13 @@ jobs:
       - name: Deploy via PythonAnywhere API
         run: |
           python -m pip install --upgrade pythonanywhere
-          python -m pythonanywhere.pa_autoconfigure_webapp --api-token "$PA_API_TOKEN" --nuke \
+          echo "$HOME/.local/bin" >> $GITHUB_PATH   # ensure CLI is on PATH
+          pa_autoconfigure_webapp --api-token "$PA_API_TOKEN" --nuke \
             --branch main \
             --domain "$PA_WEBAPP" \
             --python=python3.11 \
             git+https://github.com/hugo-khan/5CC2SEG-SGC-QuickSilver-6.git
-          python -m pythonanywhere.pa_reload_webapp --api-token "$PA_API_TOKEN" "$PA_WEBAPP"
+          pa_reload_webapp --api-token "$PA_API_TOKEN" "$PA_WEBAPP"
         env:
           PA_API_TOKEN: ${{ secrets.PA_API_TOKEN }}
           PA_WEBAPP:    ${{ secrets.PA_WEBAPP }}
