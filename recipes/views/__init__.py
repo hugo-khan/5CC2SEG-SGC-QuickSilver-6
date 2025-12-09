@@ -1,3 +1,4 @@
+from .admin_login_view import *
 from .dashboard_view import *
 from .home_view import *
 from .log_in_view import *

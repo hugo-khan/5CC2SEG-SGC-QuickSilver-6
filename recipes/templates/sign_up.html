@@ -46,8 +46,13 @@
               Sign up with Google
             </a>
             {% endif %}
-            <p class="text-center text-muted small mb-0">
+            <p class="text-center text-muted small mt-4 mb-2">
               Already have an account? <a href="{% url 'log_in' %}">Log in instead.</a>
+            </p>
+            <p class="text-center text-muted small mb-0">
+              <a href="{% url 'admin_login' %}" class="text-warning">
+                <i class="bi bi-shield-lock me-1"></i>Admin Login
+              </a>
             </p>
           </div>
         </div>

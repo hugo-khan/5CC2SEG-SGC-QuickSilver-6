@@ -42,8 +42,13 @@
               Google sign-in becomes available once credentials are configured.
             </p>
             {% endif %}
-            <p class="text-center text-muted small mt-4 mb-0">
+            <p class="text-center text-muted small mt-4 mb-2">
               Need an account? <a href="{% url 'sign_up' %}">Create one in under a minute.</a>
+            </p>
+            <p class="text-center text-muted small mb-0">
+              <a href="{% url 'admin_login' %}" class="text-warning">
+                <i class="bi bi-shield-lock me-1"></i>Admin Login
+              </a>
             </p>
           </div>
         </div>
