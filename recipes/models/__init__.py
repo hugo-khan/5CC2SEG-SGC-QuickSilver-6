@@ -4,6 +4,7 @@ from .follow import Follow
 from .saved_recipes import SavedRecipe
 from .comment import Comment
 from .like import Like
+from .ai_chat import RecipeDraftSuggestion, ChatMessage
 
 __all__ = [
     "User",
@@ -12,4 +13,6 @@ __all__ = [
     "SavedRecipe",
     "Comment",
     "Like",
+    "RecipeDraftSuggestion",
+    "ChatMessage",
 ]

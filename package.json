@@ -1,0 +1,16 @@
+{
+  "name": "recipify",
+  "version": "1.0.0",
+  "description": "Recipify - A recipe sharing platform with AI-powered recipe suggestions",
+  "private": true,
+  "scripts": {
+    "test": "node --test static/js/ai_chatbot.test.js",
+    "test:js": "node --test static/js/ai_chatbot.test.js"
+  },
+  "keywords": ["recipes", "django", "ai", "chatbot"],
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

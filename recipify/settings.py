@@ -178,6 +178,9 @@ ACCOUNT_ADAPTER = 'recipes.adapters.RecipeAccountAdapter'  # Custom adapter for 
 # Redirect URL when logged in
 REDIRECT_URL_WHEN_LOGGED_IN = 'dashboard'
 
+# Login URL for @login_required decorator
+LOGIN_URL = 'log_in'
+
 # Google OAuth Credentials
 # Set these via environment variables (use .env file for local development)
 # Never commit actual secrets to the repository!
@@ -211,3 +214,49 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
+# =============================================================================
+# Cache Configuration (for AI recipe service)
+# =============================================================================
+# Using local-memory cache by default (no external service needed)
+# For production, consider database cache or memcached
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'recipify-cache',
+        'TIMEOUT': 86400 * 3,  # 3 days default TTL
+        'OPTIONS': {
+            'MAX_ENTRIES': 500,  # Limit memory usage
+        }
+    }
+}
+
+# =============================================================================
+# Logging Configuration (for AI profiling)
+# =============================================================================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'recipes.ai': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+}
