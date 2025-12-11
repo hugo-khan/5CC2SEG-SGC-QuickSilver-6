@@ -1768,6 +1768,27 @@ html {
   color: var(--text-primary);
 }
 
+/* Difficulty badges (pastel) */
+.difficulty-badge {
+  display: inline-block;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  font-size: 0.78rem;
+  margin-left: 0.08rem;
+}
+
+.difficulty-easy {
+  color: #1f7a4d; /* pastel green text */
+}
+
+.difficulty-medium {
+  color: #c26b23; /* pastel orange text */
+}
+
+.difficulty-hard {
+  color: #c23434; /* pastel red text */
+}
+
 /* Responsive Typography */
 @media (max-width: 768px) {
   .hero-title {

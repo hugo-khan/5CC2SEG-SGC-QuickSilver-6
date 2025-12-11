@@ -46,7 +46,9 @@ def _mock_successful_response():
                     "prep_time_minutes": 10,
                     "cook_time_minutes": 20,
                     "servings": 4,
-                    "dietary_notes": ""
+                    "dietary_notes": "",
+                    "dietary_requirement": "vegetarian",
+                    "difficulty": "medium",
                 })
             }
         }],
@@ -437,6 +439,8 @@ class PublishingTest(FastRecipeServiceTestCase):
             "prep_time_minutes": 10,
             "cook_time_minutes": 20,
             "servings": 4,
+            "dietary_requirement": "vegetarian",
+            "difficulty": "medium",
         }
         
         recipe = publish_recipe_from_fields(form_fields, self.user)
@@ -445,6 +449,8 @@ class PublishingTest(FastRecipeServiceTestCase):
         self.assertIsNotNone(recipe.id)
         self.assertEqual(recipe.title, "Test Pasta")
         self.assertEqual(recipe.author, self.user)
+        self.assertEqual(recipe.dietary_requirement, "vegetarian")
+        self.assertEqual(recipe.difficulty, "medium")
         self.assertTrue(recipe.is_published)
     
     def test_publish_recipe_requires_title(self):
@@ -516,6 +522,8 @@ class FormatOutputTest(FastRecipeServiceTestCase):
             "prep_time_minutes": 15,
             "cook_time_minutes": 30,
             "servings": 6,
+            "dietary_requirement": "vegan",
+            "difficulty": "hard",
         }
         
         fields = _format_form_fields(recipe_json)
@@ -528,6 +536,8 @@ class FormatOutputTest(FastRecipeServiceTestCase):
         self.assertEqual(fields["prep_time_minutes"], 15)
         self.assertEqual(fields["cook_time_minutes"], 30)
         self.assertEqual(fields["servings"], 6)
+        self.assertEqual(fields["dietary_requirement"], "vegan")
+        self.assertEqual(fields["difficulty"], "hard")
 
 
 class ViewIntegrationTest(FastRecipeServiceTestCase):

@@ -245,6 +245,8 @@ Take the structured recipe JSON from the previous task and create two outputs:
    - prep_time_minutes: integer or null
    - cook_time_minutes: integer or null
    - servings: integer or null
+   - dietary_requirement: one of [vegan, vegetarian, gluten_free, dairy_free, nut_free, none]
+   - difficulty: one of [easy, medium, hard]
 
 Output MUST be valid JSON with this structure:
 {
@@ -256,7 +258,9 @@ Output MUST be valid JSON with this structure:
         "instructions": "...",
         "prep_time_minutes": 15,
         "cook_time_minutes": 30,
-        "servings": 4
+        "servings": 4,
+        "dietary_requirement": "vegan",
+        "difficulty": "medium"
     }
 }
 """,
@@ -436,6 +440,9 @@ def publish_from_draft(draft, user) -> dict[str, Any]:
     if missing:
         raise CrewServiceError(f"Missing required fields: {', '.join(missing)}")
     
+    dietary_requirement = form_fields.get("dietary_requirement") or "none"
+    difficulty = form_fields.get("difficulty") or "easy"
+    
     try:
         # Create the recipe
         recipe = Recipe.objects.create(
@@ -449,6 +456,8 @@ def publish_from_draft(draft, user) -> dict[str, Any]:
             prep_time_minutes=form_fields.get("prep_time_minutes"),
             cook_time_minutes=form_fields.get("cook_time_minutes"),
             servings=form_fields.get("servings"),
+            dietary_requirement=dietary_requirement,
+            difficulty=difficulty,
             is_published=True,
         )
         

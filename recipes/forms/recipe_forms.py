@@ -14,6 +14,7 @@ class RecipeForm(forms.ModelForm):
             "ingredients",
             "instructions",
             "dietary_requirement",
+            "difficulty",
             "prep_time_minutes",
             "cook_time_minutes",
             "servings",
@@ -22,6 +23,7 @@ class RecipeForm(forms.ModelForm):
             "ingredients": forms.Textarea(attrs={"rows": 5}),
             "instructions": forms.Textarea(attrs={"rows": 8}),
             "dietary_requirement": forms.Select(),
+            "difficulty": forms.Select(),
         }
 
     def clean_ingredients(self):
