@@ -119,5 +119,3 @@ class RecipeModelTest(TestCase):
             instructions='Test',
         )
         self.assertEqual(recipe.created_by, self.user)
-
-

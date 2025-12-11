@@ -1,0 +1,14 @@
+<!-- add this into the admin base template -->
+
+{% extends "admin/base.html" %}
+
+{% block sidebar %}
+    {{ block.super }}
+
+    <div class="module">
+        <h3>Moderation</h3>
+        <ul>
+            <li><a href="{% url 'reported_comments' %}">Manage Reported Comments</a></li>
+        </ul>
+    </div>
+{% endblock %}

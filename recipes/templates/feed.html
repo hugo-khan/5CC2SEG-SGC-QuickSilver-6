@@ -1,5 +1,7 @@
 add into actual feed html template
 
+
+
 {% for comment in recipe.comments.all|slice:":3" %}
     <div class="border p-2 mb-2 rounded">
         <strong>{{ comment.user.username }}</strong>

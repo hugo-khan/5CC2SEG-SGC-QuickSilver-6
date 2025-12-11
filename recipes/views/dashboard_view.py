@@ -2,6 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.cache import never_cache
 
+from recipes.forms.recipe_filter_form import RecipeFilterForm
+from recipes.helpers import collect_all_ingredients
 from recipes.models import Recipe, SavedRecipe
 
 
@@ -35,6 +37,18 @@ def browse_recipes(request):
 
     # Normal GET request: show all recipes with saved-state information
     recipes = Recipe.objects.all().select_related("author")
+    
+    # Set up filter form with ingredient choices
+    form = RecipeFilterForm(request.GET or None)
+    all_ingredients = collect_all_ingredients()
+    form.fields['ingredients'].choices = [(i, i.title()) for i in all_ingredients]
+    
+    # Filter by selected ingredients
+    selected_ingredients = request.GET.getlist('ingredients')
+    if selected_ingredients:
+        for ingredient in selected_ingredients:
+            recipes = recipes.filter(ingredients__icontains=ingredient)
+    
     my_recipes = (
         Recipe.objects.filter(author=current_user)
         .select_related("author")
@@ -49,5 +63,7 @@ def browse_recipes(request):
         "recipes": recipes,
         "my_recipes": my_recipes,
         "saved_recipe_ids": list(saved_recipe_ids),
+        "form": form,
+        "selected_ingredients": selected_ingredients,
     }
     return render(request, "dashboard.html", context)

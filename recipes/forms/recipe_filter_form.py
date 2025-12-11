@@ -1,3 +1,5 @@
+from cProfile import label
+
 from django import forms
 from recipes.models import Recipe
 
@@ -9,6 +11,13 @@ class RecipeFilterForm(forms.Form):
             'class': 'form-control',
             'placeholder': 'Search by name...'
         })
+    )
+
+    ingredients = forms.MultipleChoiceField(
+        choices=[],
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        label='Ingredients'
     )
     
     dietary_requirement = forms.MultipleChoiceField(

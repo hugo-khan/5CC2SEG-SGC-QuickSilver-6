@@ -2,12 +2,21 @@ from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
 from django.contrib.auth import get_user_model
 from recipes.models import Recipe
+from recipes.forms.recipe_filter_form import RecipeFilterForm
+from recipes.helpers import collect_all_ingredients
 from django.core.paginator import Paginator
 
 def author_recipes(request, author_id):
     author = get_object_or_404(get_user_model(), id=author_id)
     recipes = Recipe.objects.filter(author=author)
+    form = RecipeFilterForm(request.GET or None)
 
+    #Filter by ingredients
+    form.fields['ingredients'].choices = [(i, i.title()) for i in collect_all_ingredients()]
+    selected_ingredients = request.GET.getlist('ingredients')
+    if selected_ingredients:
+        for ingredient in selected_ingredients:
+            recipes = recipes.filter(ingredients__icontains=ingredient)
     # Search by name
     search_term = (request.GET.get('search') or "").strip()
     if search_term:
