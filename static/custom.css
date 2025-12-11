@@ -836,6 +836,21 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
 }
 
+.comment-header .btn-outline-danger {
+  border-color: rgba(220, 53, 69, 0.3);
+  color: #dc3545;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.comment-header .btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: var(--white);
+  transform: scale(1.05);
+}
+
 .comment-empty {
   text-align: center;
   padding: 4rem 2rem;

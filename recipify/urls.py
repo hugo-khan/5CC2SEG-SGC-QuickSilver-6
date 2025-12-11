@@ -22,6 +22,7 @@ from django.urls import include, path
 from recipes.views.admin_login_view import AdminLoginView
 from recipes.views.author_recipes_view import author_recipes
 from recipes.views.comment_view import AddCommentView
+from recipes.views.comment_delete_view import CommentDeleteView
 from recipes.views.dashboard_view import dashboard
 from recipes.views.delete_account_view import DeleteAccountView
 from recipes.views.edit_profile_view import ProfileUpdateView  # Edit profile
@@ -64,6 +65,11 @@ urlpatterns = [
         "recipe/<int:recipe_id>/comment/",
         AddCommentView.as_view(),
         name="add_comment",
+    ),
+    path(
+        "comments/<int:pk>/delete/",
+        CommentDeleteView.as_view(),
+        name="comment_delete",
     ),
     path(
         "recipe/<int:recipe_id>/like/",
