@@ -213,7 +213,7 @@ def _build_recipe_prompt(
 ) -> str:
     """Build the optimized prompt for single-call recipe generation."""
     
-    dietary_note = f"\nDietary requirements: {dietary}" if dietary else ""
+    dietary_note = f"\nDietary requirements (use EXACT code): {dietary}" if dietary else "\nDietary requirements: none (use code \"none\")"
     
     search_section = ""
     if used_search and search_context:
@@ -242,7 +242,9 @@ Output ONLY valid JSON with this exact structure (no markdown, no extra text):
     "prep_time_minutes": <integer - CALCULATE based on actual prep work needed>,
     "cook_time_minutes": <integer - CALCULATE based on actual cooking/baking time>,
     "servings": <integer - CALCULATE appropriate portion count>,
-    "dietary_notes": "Any relevant dietary info"
+    "dietary_notes": "Any relevant dietary info",
+    "dietary_requirement": "<exact code: vegan | vegetarian | gluten_free | dairy_free | nut_free | none>",
+    "difficulty": "<exact code: easy | medium | hard>"
 }}
 
 CRITICAL REQUIREMENTS:
@@ -253,6 +255,8 @@ CRITICAL REQUIREMENTS:
 - Maximum {config.MAX_STEPS} steps
 - Keep summary under {config.MAX_SUMMARY_CHARS} characters
 - Include allergy warnings if relevant
+- difficulty: Choose easy/medium/hard based on time, techniques, and steps count.
+- dietary_requirement: Use ONLY the allowed codes (vegan, vegetarian, gluten_free, dairy_free, nut_free, none) and honour the user's requested dietary requirement.
 
 DO NOT use placeholder values. Calculate each time/serving based on the specific recipe."""
 
@@ -385,6 +389,9 @@ def _format_form_fields(recipe_json: Dict) -> Dict:
     Convert recipe JSON to Django form field format.
     This is pure Python - no LLM call needed.
     """
+    allowed_dietary = {"vegan", "vegetarian", "gluten_free", "dairy_free", "nut_free", "none"}
+    allowed_difficulty = {"easy", "medium", "hard"}
+    
     ingredients = recipe_json.get("ingredients", [])
     instructions = recipe_json.get("instructions", [])
     
@@ -394,6 +401,12 @@ def _format_form_fields(recipe_json: Dict) -> Dict:
     # Format instructions as newline-separated string
     instructions_str = "\n".join(instructions[:config.MAX_STEPS])
     
+    raw_dietary = (recipe_json.get("dietary_requirement") or recipe_json.get("dietary_notes") or "none").strip().lower().replace(" ", "_")
+    dietary_requirement = raw_dietary if raw_dietary in allowed_dietary else "none"
+    
+    raw_difficulty = (recipe_json.get("difficulty") or "easy").strip().lower()
+    difficulty = raw_difficulty if raw_difficulty in allowed_difficulty else "easy"
+    
     return {
         "title": recipe_json.get("title", "Untitled Recipe")[:200],
         "summary": recipe_json.get("summary", "")[:255],
@@ -402,6 +415,8 @@ def _format_form_fields(recipe_json: Dict) -> Dict:
         "prep_time_minutes": recipe_json.get("prep_time_minutes"),
         "cook_time_minutes": recipe_json.get("cook_time_minutes"),
         "servings": recipe_json.get("servings"),
+        "dietary_requirement": dietary_requirement,
+        "difficulty": difficulty,
     }
 
 
@@ -540,6 +555,8 @@ def publish_recipe_from_fields(form_fields: Dict, user) -> "Recipe":
             raise FastRecipeError(f"Missing required fields: {', '.join(missing)}")
         
         # Create recipe
+        dietary_requirement = form_fields.get("dietary_requirement") or "none"
+        difficulty = form_fields.get("difficulty") or "easy"
         recipe = Recipe.objects.create(
             author=user,
             title=form_fields.get("title", "Untitled Recipe"),
@@ -551,6 +568,8 @@ def publish_recipe_from_fields(form_fields: Dict, user) -> "Recipe":
             prep_time_minutes=form_fields.get("prep_time_minutes"),
             cook_time_minutes=form_fields.get("cook_time_minutes"),
             servings=form_fields.get("servings"),
+            dietary_requirement=dietary_requirement,
+            difficulty=difficulty,
             is_published=True,
         )
         

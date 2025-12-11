@@ -11,6 +11,7 @@ class RecipeFormTest(TestCase):
             "summary": "Tasty cake",
             "ingredients": "Flour\nSugar",
             "instructions": "Mix\nBake",
+            "dietary_requirement": "none",
             "prep_time_minutes": 10,
             "cook_time_minutes": 30,
             "servings": 4,

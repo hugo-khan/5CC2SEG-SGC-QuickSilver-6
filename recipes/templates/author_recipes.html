@@ -51,8 +51,8 @@
             <div class="col-md-4 mb-3">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">{{ recipe.name }}</h5>
-                        <p class="card-text">{{ recipe.description|truncatewords:15 }}</p>
+                        <h5 class="card-title">{{ recipe.name|default:recipe.title }}</h5>
+                        <p class="card-text">{{ recipe.description|default:recipe.summary|truncatewords:15 }}</p>
                         <p class="text-muted small">
                             📅 Posted: {{ recipe.date_posted|date:"M d, Y" }}<br>
                             🥗 Dietary: <strong>{{ recipe.get_dietary_requirement_display }}</strong><br>

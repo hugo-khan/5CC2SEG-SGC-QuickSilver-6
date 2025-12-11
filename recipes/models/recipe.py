@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from recipes.image_service import ImageService  
+
 
 class Recipe(models.Model):
     """
@@ -70,10 +72,25 @@ class Recipe(models.Model):
 
     # Sharing
     share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    
-    # Image - Using URLField only to avoid Pillow dependency issues
-    # Can add ImageField later if needed after installing system dependencies
-    image_url = models.URLField(blank=True, null=True, help_text="External image URL (e.g., from AI generation or Unsplash)")
+
+    # Main recipe image (uploaded file, compressed on save)
+    image = models.ImageField(
+        upload_to="recipes/",
+        blank=True,
+        null=True,
+        help_text="Main image for this recipe",
+    )
+
+    # Users who liked this recipe.
+    # We keep the ManyToMany interface expected by the like feature/tests,
+    # but route it through the dedicated Like model so we don't lose any
+    # information or constraints.
+    likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="liked_recipes",
+        through="Like",
+        blank=True,
+    )
 
     class Meta:
         ordering = ["-created_at", "-date_posted"]
@@ -114,13 +131,13 @@ class Recipe(models.Model):
             reverse('recipe_share', kwargs={'share_token': self.share_token})
         )
 
-    # Users who liked this recipe.
-    # We keep the ManyToMany interface expected by the like feature/tests,
-    # but route it through the dedicated Like model so we don't lose any
-    # information or constraints.
-    likes = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name="liked_recipes",
-        through="Like",
-        blank=True,
-    )
+    def save(self, *args, **kwargs):
+        """
+        Override save to automatically compress/resize the uploaded image
+        using the ImageService, if an image has been provided.
+        """
+        if self.image and hasattr(self.image, "file"):
+            # Compress/resize image before saving
+            self.image = ImageService.compress_image(self.image)
+
+        super().save(*args, **kwargs)

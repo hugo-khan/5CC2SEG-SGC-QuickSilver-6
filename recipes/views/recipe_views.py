@@ -158,6 +158,7 @@ class RecipeDeleteView(LoginRequiredMixin, RecipeAuthorRequiredMixin, DeleteView
 
     def delete(self, request, *args, **kwargs):
         recipe = self.get_object()
+
         messages.success(self.request, f'Recipe "{recipe.title}" has been deleted.')
         return super().delete(request, *args, **kwargs)
 

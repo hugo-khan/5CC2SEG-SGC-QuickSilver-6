@@ -4,9 +4,12 @@
   <div class="row">
     <div class="col-lg-8">
       <h1 class="mb-4">{{ page_title }}</h1>
-      <form method="post">
+
+      <!-- IMPORTANT: enctype added for file upload -->
+      <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% include 'partials/bootstrap_form.html' with form=form %}
+
         <div class="d-flex gap-2 mt-3">
           <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
           <a href="{% if object %}{% url 'recipe_detail' object.pk %}{% else %}{% url 'recipe_list' %}{% endif %}" class="btn btn-outline-secondary">Cancel</a>
@@ -16,5 +19,3 @@
   </div>
 </div>
 {% endblock %}
-
-
