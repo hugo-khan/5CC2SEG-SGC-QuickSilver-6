@@ -13,6 +13,7 @@ class RecipeForm(forms.ModelForm):
             "summary",
             "ingredients",
             "instructions",
+            "dietary_requirement",
             "prep_time_minutes",
             "cook_time_minutes",
             "servings",
@@ -20,6 +21,7 @@ class RecipeForm(forms.ModelForm):
         widgets = {
             "ingredients": forms.Textarea(attrs={"rows": 5}),
             "instructions": forms.Textarea(attrs={"rows": 8}),
+            "dietary_requirement": forms.Select(),
         }
 
     def clean_ingredients(self):
@@ -33,5 +35,4 @@ class RecipeForm(forms.ModelForm):
         if not instructions:
             raise forms.ValidationError("Please provide the cooking instructions.")
         return instructions
-
 
