@@ -1,5 +1,4 @@
 from django import forms
-
 from recipes.models import Recipe
 
 
@@ -16,6 +15,7 @@ class RecipeForm(forms.ModelForm):
             "prep_time_minutes",
             "cook_time_minutes",
             "servings",
+            "image",        # ⬅️ NEW: add image upload
         ]
         widgets = {
             "ingredients": forms.Textarea(attrs={"rows": 5}),
@@ -33,5 +33,3 @@ class RecipeForm(forms.ModelForm):
         if not instructions:
             raise forms.ValidationError("Please provide the cooking instructions.")
         return instructions
-
-
