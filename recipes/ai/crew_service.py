@@ -16,6 +16,7 @@ import json
 import logging
 from typing import Any
 
+from django.utils.text import slugify
 from recipes.ai.profiling import profile_stage, clear_profile, log_profile_table
 
 logger = logging.getLogger(__name__)
@@ -460,6 +461,9 @@ def publish_from_draft(draft, user) -> dict[str, Any]:
             difficulty=difficulty,
             is_published=True,
         )
+
+        # Seed image (non-blocking)
+        _seed_recipe_image(recipe)
         
         # Update draft status
         draft.status = RecipeDraftSuggestion.Status.PUBLISHED
@@ -479,3 +483,27 @@ def publish_from_draft(draft, user) -> dict[str, Any]:
         draft.save()
         raise CrewServiceError(f"Failed to publish recipe: {str(e)}")
 
+
+def _seed_recipe_image(recipe):
+    """
+    Reuse populate_images command logic to seed a recipe image without blocking publish.
+    """
+    try:
+        from recipes.management.commands.populate_images import Command as PopulateImagesCommand
+
+        cmd = PopulateImagesCommand()
+        image_url = cmd.get_pexels_image(recipe)
+
+        basename = slugify(recipe.title) or f"recipe-{recipe.id}"
+        image_file = cmd.download_image_to_file(image_url, basename)
+
+        if not image_file:
+            image_file = cmd.generate_placeholder_image(recipe.title, basename)
+
+        if image_file:
+            filename = f"{basename}.jpg"
+            recipe.image.save(filename, image_file, save=False)
+            recipe.image_url = image_url
+            recipe.save(update_fields=["image", "image_url"])
+    except Exception as exc:
+        logger.exception(f"Image seeding failed for recipe {getattr(recipe, 'id', '?')}: {exc}")

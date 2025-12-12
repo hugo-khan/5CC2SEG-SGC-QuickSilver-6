@@ -19,7 +19,9 @@
       <div class="recipe-meta">
         <div class="recipe-meta-item">
           <i class="bi bi-person-circle"></i>
-          <span>{{ recipe.author.full_name }} ({{ recipe.author.username }})</span>
+          <a href="{% url 'author_recipes' recipe.author.id %}" class="text-white text-decoration-none">
+            {{ recipe.author.full_name }} ({{ recipe.author.username }})
+          </a>
         </div>
         <div class="recipe-meta-item">
           <i class="bi bi-calendar3"></i>

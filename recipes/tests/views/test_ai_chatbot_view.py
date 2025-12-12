@@ -349,6 +349,60 @@ class AIChatbotPublishViewTest(AIChatbotViewTestCase):
         data = response.json()
         self.assertIn('Missing required fields', data['error'])
 
+    @patch('recipes.ai.crew_service._seed_recipe_image')
+    def test_publish_triggers_image_seed(self, mock_seed):
+        """Publish should trigger image seeding for the created recipe."""
+        self.client.login(username='@johndoe', password='Password123')
+        
+        response = self.client.post(
+            self.publish_url,
+            data=json.dumps({}),
+            content_type='application/json'
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        recipe = Recipe.objects.get(pk=data['recipe_id'])
+        mock_seed.assert_called_once()
+        seeded_recipe = mock_seed.call_args[0][0]
+        self.assertEqual(seeded_recipe.id, recipe.id)
+
+    @patch('recipes.ai.crew_service._seed_recipe_image')
+    def test_publish_seeding_can_set_image(self, mock_seed):
+        """Seeding success should populate the recipe image fields."""
+        def fake_seed(recipe):
+            recipe.image_url = 'https://example.com/image.jpg'
+            recipe.save(update_fields=['image_url'])
+        mock_seed.side_effect = fake_seed
+
+        self.client.login(username='@johndoe', password='Password123')
+        response = self.client.post(
+            self.publish_url,
+            data=json.dumps({}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        recipe = Recipe.objects.get(pk=data['recipe_id'])
+        self.assertEqual(recipe.image_url, 'https://example.com/image.jpg')
+
+    @patch('recipes.ai.crew_service._seed_recipe_image')
+    def test_publish_seeding_failure_does_not_block(self, mock_seed):
+        """Seeding failure should not block publishing."""
+        mock_seed.side_effect = Exception("seed failed")
+
+        self.client.login(username='@johndoe', password='Password123')
+        response = self.client.post(
+            self.publish_url,
+            data=json.dumps({}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        # Recipe still created
+        self.assertTrue(Recipe.objects.filter(pk=data['recipe_id']).exists())
+
     def test_publish_form_fallback(self):
         """Form POST (no-JS) redirects appropriately."""
         self.client.login(username='@janedoe', password='Password123')

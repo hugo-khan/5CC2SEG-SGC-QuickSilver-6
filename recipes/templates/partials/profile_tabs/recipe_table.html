@@ -15,6 +15,15 @@
           <td>
             <a href="{% url 'recipe_detail' recipe.pk %}" class="text-decoration-none text-reset d-block">
               <div class="d-flex align-items-center">
+                {% if recipe.image %}
+                  <div class="me-3" style="width: 64px; height: 48px; overflow: hidden; border-radius: 6px;">
+                    <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" style="width:100%; height:100%; object-fit: cover;">
+                  </div>
+                {% elif recipe.image_url %}
+                  <div class="me-3" style="width: 64px; height: 48px; overflow: hidden; border-radius: 6px;">
+                    <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" style="width:100%; height:100%; object-fit: cover;">
+                  </div>
+                {% endif %}
                 <div class="flex-grow-1">
                   <h6 class="mb-0">{{ recipe.title }}</h6>
                   <small class="text-muted">
