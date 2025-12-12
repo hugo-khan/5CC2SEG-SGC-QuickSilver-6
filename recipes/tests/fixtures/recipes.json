@@ -73,5 +73,21 @@
       "is_published": true,
       "author": 3
     }
+  },
+  {
+    "model": "recipes.recipe",
+    "pk": 6,
+    "fields": {
+      "title": "Spaghetti Bolognese",
+      "description": "A hearty pasta dish with rich meat sauce",
+      "instructions": "Cook spaghetti. Make sauce by simmering meat, tomatoes, onions, garlic, and spices.",
+      "ingredients": "spaghetti,ground beef,tomato sauce,onion,garlic,olive oil,oregano,parsley,parmesan cheese",
+      "prep_time_minutes": 20,
+      "cook_time_minutes": 40,
+      "servings": 4,
+      "is_published": true,
+      "author": 2
+    }
   }
 ]
+
