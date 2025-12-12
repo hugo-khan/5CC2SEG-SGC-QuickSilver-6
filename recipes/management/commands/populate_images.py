@@ -1,26 +1,21 @@
-"""
-Management command to populate recipe images using AI-generated or food photography.
-Uses Unsplash Source API (free, no key needed) for food images based on recipe titles.
-Can be extended to use OpenAI DALL-E or other AI services.
-"""
+"""Populate recipe images via Pexels; fallback to a black placeholder."""
 
 import os
+from io import BytesIO
 import requests
+from PIL import Image, ImageDraw
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
+from django.db import models
+from django.utils.text import slugify
+
 from recipes.models import Recipe
 
 
 class Command(BaseCommand):
-    help = 'Populate recipe images using AI-generated or food photography'
+    help = 'Populate recipe images using Pexels (food search) with fallback to local placeholder'
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            '--method',
-            type=str,
-            default='unsplash',
-            choices=['unsplash', 'placeholder'],
-            help='Method to use for image generation (default: unsplash)',
-        )
         parser.add_argument(
             '--overwrite',
             action='store_true',
@@ -33,7 +28,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        method = options['method']
         overwrite = options['overwrite']
         recipe_id = options.get('recipe_id')
 
@@ -49,31 +43,35 @@ class Command(BaseCommand):
             if overwrite:
                 recipes = Recipe.objects.all()
             else:
-                recipes = Recipe.objects.filter(image_url__isnull=True)
+                recipes = Recipe.objects.filter(
+                    models.Q(image__isnull=True) | models.Q(image="")
+                )
 
         total = recipes.count()
         if total == 0:
             self.stdout.write(self.style.WARNING('No recipes to process'))
             return
 
-        self.stdout.write(f'Processing {total} recipe(s) using {method} method...')
+        self.stdout.write(f'Processing {total} recipe(s) using Pexels...')
 
         success_count = 0
         error_count = 0
 
         for recipe in recipes:
             try:
-                if method == 'unsplash':
-                    image_url = self.get_unsplash_image(recipe)
-                elif method == 'placeholder':
-                    image_url = self.get_placeholder_image(recipe)
-                else:
-                    image_url = None
+                image_url = self.get_pexels_image(recipe)
 
-                if image_url:
-                    # Save URL to model (no need to download since we're using external URLs)
+                basename = slugify(recipe.title) or f"recipe-{recipe.id}"
+                image_file = self.download_image_to_file(image_url, basename)
+
+                if not image_file:
+                    image_file = self.generate_placeholder_image(recipe.title, basename)
+
+                if image_file:
+                    filename = f"{basename}.jpg"
+                    recipe.image.save(filename, image_file, save=False)
                     recipe.image_url = image_url
-                    recipe.save()
+                    recipe.save(update_fields=["image", "image_url"])
 
                     self.stdout.write(
                         self.style.SUCCESS(
@@ -104,43 +102,91 @@ class Command(BaseCommand):
             )
         )
 
-    def get_unsplash_image(self, recipe):
-        """
-        Get a food image from Unsplash Source API based on recipe title.
-        Unsplash Source API is free and doesn't require an API key.
-        """
-        # Clean up recipe title for search
-        search_term = recipe.title.lower()
-        
-        # Remove common words that don't help with image search
-        stop_words = ['recipe', 'how to', 'easy', 'quick', 'best', 'classic', 'homemade']
-        for word in stop_words:
-            search_term = search_term.replace(word, '')
-        
-        search_term = search_term.strip().replace(' ', '-')
-        
-        # Use Unsplash Source API (free, no key needed)
-        # Format: https://source.unsplash.com/800x600/?{search-term}
-        # We'll use food-related keywords
-        image_url = f'https://source.unsplash.com/800x600/?food,{search_term}'
-        
-        # Try to verify the image exists
-        try:
-            response = requests.head(image_url, timeout=5, allow_redirects=True)
-            if response.status_code == 200:
-                return image_url
-        except:
-            pass
-        
-        # Fallback to generic food image
-        return 'https://source.unsplash.com/800x600/?food,cuisine'
+    def get_pexels_image(self, recipe):
+        """Fetch a food image URL from Pexels or return None."""
+        api_key = os.environ.get("PEXELS_API_KEY")
+        if not api_key:
+            self.stdout.write(self.style.WARNING("PEXELS_API_KEY not set; using placeholders."))
+            return None
 
-    def get_placeholder_image(self, recipe):
-        """
-        Get a placeholder image service URL.
-        This is a fallback option.
-        """
-        # Using placeholder.com or similar service
-        search_term = recipe.title.replace(' ', '%20')
-        return f'https://via.placeholder.com/800x600/cccccc/666666?text={search_term}'
+        if not self._looks_like_food(recipe):
+            return None
+
+        query = recipe.title or "food"
+        try:
+            resp = requests.get(
+                "https://api.pexels.com/v1/search",
+                headers={"Authorization": api_key},
+                params={
+                    "query": query,
+                    "per_page": 1,
+                    "orientation": "landscape",
+                },
+                timeout=10,
+            )
+            if resp.status_code != 200:
+                self.stdout.write(self.style.WARNING(f"Pexels API returned {resp.status_code} for '{query}'"))
+                return None
+            data = resp.json()
+            photos = data.get("photos") or []
+            if not photos:
+                return None
+            src = photos[0].get("src") or {}
+            # Prefer large landscape variants; fallback to original
+            return src.get("large2x") or src.get("large") or src.get("original")
+        except Exception as exc:
+            self.stdout.write(self.style.WARNING(f"Pexels fetch failed for '{query}': {exc}"))
+            return None
+
+    def download_image_to_file(self, url, basename):
+        """Download an image and return it as ContentFile or None."""
+        if not url:
+            return None
+
+        try:
+            resp = requests.get(url, timeout=15)
+            if resp.status_code != 200:
+                return None
+
+            # Validate image by attempting to open it
+            img = Image.open(BytesIO(resp.content)).convert("RGB")
+            buffer = BytesIO()
+            img.save(buffer, format="JPEG", quality=80, optimize=True)
+            buffer.seek(0)
+            return ContentFile(buffer.read(), name=f"{basename}.jpg")
+        except Exception:
+            return None
+
+    def generate_placeholder_image(self, title, basename):
+        """Create a black gradient placeholder image."""
+        width, height = 1200, 800
+        base_color = (10, 10, 10)
+        accent_color = (0, 0, 0)
+
+        img = Image.new("RGB", (width, height), color=base_color)
+        draw = ImageDraw.Draw(img)
+
+        # Subtle vertical gradient
+        for y in range(height):
+            blend = y / height
+            r = int(base_color[0] * (1 - blend) + accent_color[0] * blend)
+            g = int(base_color[1] * (1 - blend) + accent_color[1] * blend)
+            b = int(base_color[2] * (1 - blend) + accent_color[2] * blend)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
+
+        buffer = BytesIO()
+        img.save(buffer, format="JPEG", quality=85, optimize=True)
+        buffer.seek(0)
+        return ContentFile(buffer.read(), name=f"{basename}.jpg")
+
+    def _looks_like_food(self, recipe):
+        """Heuristic: True if ingredients or title look food-related."""
+        if recipe.ingredients:
+            # If there are commas or multiple words, assume it's food
+            if "," in recipe.ingredients or len(recipe.ingredients.split()) > 3:
+                return True
+
+        food_words = ["chicken", "beef", "pasta", "salad", "soup", "curry", "cookie", "cake", "taco", "noodle", "pizza", "burger", "fish", "vegetable", "veggie", "rice", "stir", "fry"]
+        title_lower = (recipe.title or "").lower()
+        return any(word in title_lower for word in food_words)
 

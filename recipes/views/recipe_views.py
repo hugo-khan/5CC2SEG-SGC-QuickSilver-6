@@ -9,6 +9,7 @@ from recipes.forms import RecipeForm, CommentForm, CommentReportForm
 from recipes.forms.recipe_filter_form import RecipeFilterForm
 from recipes.helpers import collect_all_ingredients
 from recipes.models import Comment, Follow, Recipe, SavedRecipe, User
+from recipes.signals import delete_recipe_image
 
 
 class RecipeListView(ListView):
@@ -158,6 +159,9 @@ class RecipeDeleteView(LoginRequiredMixin, RecipeAuthorRequiredMixin, DeleteView
 
     def delete(self, request, *args, **kwargs):
         recipe = self.get_object()
+
+        delete_recipe_image(recipe)
+
         messages.success(self.request, f'Recipe "{recipe.title}" has been deleted.')
         return super().delete(request, *args, **kwargs)
 

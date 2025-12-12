@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from recipes.image_service import ImageService  
+
 
 class Recipe(models.Model):
     """
@@ -70,10 +72,29 @@ class Recipe(models.Model):
 
     # Sharing
     share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    
-    # Image - Using URLField only to avoid Pillow dependency issues
-    # Can add ImageField later if needed after installing system dependencies
-    image_url = models.URLField(blank=True, null=True, help_text="External image URL (e.g., from AI generation or Unsplash)")
+
+    # Seeded image
+    image_url = models.URLField(blank=True, null=True, help_text="External image URL")
+
+
+    # Main recipe image (uploaded file, compressed on save)
+    image = models.ImageField(
+        upload_to="recipes/",
+        blank=True,
+        null=True,
+        help_text="Main image for this recipe",
+    )
+
+    # Users who liked this recipe.
+    # We keep the ManyToMany interface expected by the like feature/tests,
+    # but route it through the dedicated Like model so we don't lose any
+    # information or constraints.
+    likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="liked_recipes",
+        through="Like",
+        blank=True,
+    )
 
     class Meta:
         ordering = ["-created_at", "-date_posted"]
@@ -114,13 +135,28 @@ class Recipe(models.Model):
             reverse('recipe_share', kwargs={'share_token': self.share_token})
         )
 
-    # Users who liked this recipe.
-    # We keep the ManyToMany interface expected by the like feature/tests,
-    # but route it through the dedicated Like model so we don't lose any
-    # information or constraints.
-    likes = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name="liked_recipes",
-        through="Like",
-        blank=True,
-    )
+    def save(self, *args, **kwargs):
+        """
+        - Compress new uploaded images
+        - Delete old image if replaced or cleared
+        """
+
+        # Get old image (if this is an update)
+        old_image = None
+        if self.pk:
+            try:
+                old_image = Recipe.objects.get(pk=self.pk).image
+            except Recipe.DoesNotExist:
+                pass
+
+        # If a new image was uploaded, compress it
+        if self.image and hasattr(self.image, "file"):
+            self.image = ImageService.compress_image(self.image)
+
+        super().save(*args, **kwargs)
+
+        # --- DELETE OLD IMAGE ---
+        # If there WAS an old image but it is DIFFERENT now → delete it
+        if old_image and old_image != self.image:
+            old_image.delete(save=False)
+

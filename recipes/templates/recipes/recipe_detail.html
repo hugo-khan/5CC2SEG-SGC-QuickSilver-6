@@ -2,14 +2,20 @@
 {% block content %}
 <!-- Hero Section -->
 <div class="recipe-hero">
-  {% if recipe.image_url %}
-  <div class="recipe-hero-image">
-    <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="hero-img">
-  </div>
+  {% if recipe.image %}
+    <div class="recipe-hero-image">
+      <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" class="hero-img">
+    </div>
+  {% elif recipe.image_url %}
+    <div class="recipe-hero-image">
+      <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}" class="hero-img">
+    </div>
   {% endif %}
   <div class="container">
     <div class="recipe-hero-content">
       <h1 class="recipe-title">{{ recipe.title }}</h1>
+      <!-- (rest of your hero content remains identical) -->
+
       <div class="recipe-meta">
         <div class="recipe-meta-item">
           <i class="bi bi-person-circle"></i>

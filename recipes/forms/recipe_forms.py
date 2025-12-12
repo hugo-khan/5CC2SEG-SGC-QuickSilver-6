@@ -1,10 +1,11 @@
 from django import forms
-
 from recipes.models import Recipe
-
 
 class RecipeForm(forms.ModelForm):
     """Form used for creating and updating recipes."""
+
+    # Allow image to be optional AND clearable
+    image = forms.ImageField(required=False)
 
     class Meta:
         model = Recipe
@@ -18,6 +19,7 @@ class RecipeForm(forms.ModelForm):
             "prep_time_minutes",
             "cook_time_minutes",
             "servings",
+            "image",
         ]
         widgets = {
             "ingredients": forms.Textarea(attrs={"rows": 5}),
@@ -37,4 +39,6 @@ class RecipeForm(forms.ModelForm):
         if not instructions:
             raise forms.ValidationError("Please provide the cooking instructions.")
         return instructions
+
+
 

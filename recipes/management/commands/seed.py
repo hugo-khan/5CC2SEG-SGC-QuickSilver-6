@@ -276,6 +276,8 @@ class Command(BaseCommand):
 
     def create_recipe(self, data, created_by):
         """Create a recipe with the given data."""
+
+        title = data["title"]
         Recipe.objects.create(
             title=data["title"],
             name=data.get("name", data["title"]),
@@ -293,7 +295,7 @@ class Command(BaseCommand):
             author=created_by,
         )
         self.stdout.write(
-            self.style.SUCCESS(f"✓ Created recipe: {data['title']}")
+            self.style.SUCCESS(f"✓ Created recipe: {title}")
         )
 
 def create_username(first_name, last_name):

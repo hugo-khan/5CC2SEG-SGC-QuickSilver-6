@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     
     # Local apps
-    'recipes',
+    'recipes.apps.RecipesConfig',
 ]
 
 MIDDLEWARE = [
