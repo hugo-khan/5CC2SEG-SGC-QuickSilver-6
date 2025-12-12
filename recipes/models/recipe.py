@@ -135,28 +135,28 @@ class Recipe(models.Model):
             reverse('recipe_share', kwargs={'share_token': self.share_token})
         )
 
-def save(self, *args, **kwargs):
-    """
-    - Compress new uploaded images
-    - Delete old image if replaced or cleared
-    """
+    def save(self, *args, **kwargs):
+        """
+        - Compress new uploaded images
+        - Delete old image if replaced or cleared
+        """
 
-    # Get old image (if this is an update)
-    old_image = None
-    if self.pk:
-        try:
-            old_image = Recipe.objects.get(pk=self.pk).image
-        except Recipe.DoesNotExist:
-            pass
+        # Get old image (if this is an update)
+        old_image = None
+        if self.pk:
+            try:
+                old_image = Recipe.objects.get(pk=self.pk).image
+            except Recipe.DoesNotExist:
+                pass
 
-    # If a new image was uploaded, compress it
-    if self.image and hasattr(self.image, "file"):
-        self.image = ImageService.compress_image(self.image)
+        # If a new image was uploaded, compress it
+        if self.image and hasattr(self.image, "file"):
+            self.image = ImageService.compress_image(self.image)
 
-    super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    # --- DELETE OLD IMAGE ---
-    # If there WAS an old image but it is DIFFERENT now → delete it
-    if old_image and old_image != self.image:
-        old_image.delete(save=False)
+        # --- DELETE OLD IMAGE ---
+        # If there WAS an old image but it is DIFFERENT now → delete it
+        if old_image and old_image != self.image:
+            old_image.delete(save=False)
 

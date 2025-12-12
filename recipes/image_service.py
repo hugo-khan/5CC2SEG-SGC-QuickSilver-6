@@ -8,13 +8,7 @@ class ImageService:
 
     @staticmethod
     def compress_image(uploaded_file, max_width=1600, quality=80):
-        """
-        Compress and resize an uploaded image.
-        
-        - Converts to JPEG
-        - Max width capped (keeps ratio)
-        - Adjustable quality
-        """
+        """Resize/compress an uploaded image to JPEG."""
 
         # Open original image
         img = Image.open(uploaded_file)

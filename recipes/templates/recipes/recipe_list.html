@@ -62,7 +62,11 @@
           <a class="list-group-item list-group-item-action recipe-list-item" href="{% url 'recipe_detail' recipe.pk %}">
             <div class="d-flex w-100 justify-content-between align-items-start">
               <div class="flex-grow-1">
-                {% if recipe.image_url %}
+                {% if recipe.image %}
+                <div class="recipe-list-image">
+                  <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+                </div>
+                {% elif recipe.image_url %}
                 <div class="recipe-list-image">
                   <img src="{{ recipe.image_url }}" alt="{{ recipe.title }}">
                 </div>
