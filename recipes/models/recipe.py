@@ -73,6 +73,10 @@ class Recipe(models.Model):
     # Sharing
     share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
+    # Seeded image
+    image_url = models.URLField(blank=True, null=True, help_text="External image URL")
+
+
     # Main recipe image (uploaded file, compressed on save)
     image = models.ImageField(
         upload_to="recipes/",
@@ -131,13 +135,28 @@ class Recipe(models.Model):
             reverse('recipe_share', kwargs={'share_token': self.share_token})
         )
 
-    def save(self, *args, **kwargs):
-        """
-        Override save to automatically compress/resize the uploaded image
-        using the ImageService, if an image has been provided.
-        """
-        if self.image and hasattr(self.image, "file"):
-            # Compress/resize image before saving
-            self.image = ImageService.compress_image(self.image)
+def save(self, *args, **kwargs):
+    """
+    - Compress new uploaded images
+    - Delete old image if replaced or cleared
+    """
 
-        super().save(*args, **kwargs)
+    # Get old image (if this is an update)
+    old_image = None
+    if self.pk:
+        try:
+            old_image = Recipe.objects.get(pk=self.pk).image
+        except Recipe.DoesNotExist:
+            pass
+
+    # If a new image was uploaded, compress it
+    if self.image and hasattr(self.image, "file"):
+        self.image = ImageService.compress_image(self.image)
+
+    super().save(*args, **kwargs)
+
+    # --- DELETE OLD IMAGE ---
+    # If there WAS an old image but it is DIFFERENT now → delete it
+    if old_image and old_image != self.image:
+        old_image.delete(save=False)
+

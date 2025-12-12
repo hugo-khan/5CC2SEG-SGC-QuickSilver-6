@@ -276,6 +276,9 @@ class Command(BaseCommand):
 
     def create_recipe(self, data, created_by):
         """Create a recipe with the given data."""
+
+        title = data["title"]
+        search_term = title.lower().replace(" ", "-")
         Recipe.objects.create(
             title=data["title"],
             name=data.get("name", data["title"]),
@@ -291,9 +294,10 @@ class Command(BaseCommand):
             cook_time_minutes=data.get("cook_time_minutes"),
             servings=data.get("servings"),
             author=created_by,
+            image_url=f"https://source.unsplash.com/800x600/?food,{search_term}",
         )
         self.stdout.write(
-            self.style.SUCCESS(f"✓ Created recipe: {data['title']}")
+            self.style.SUCCESS(f"✓ Created recipe with image: {title}")
         )
 
 def create_username(first_name, last_name):
