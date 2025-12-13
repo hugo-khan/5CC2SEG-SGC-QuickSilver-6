@@ -7,9 +7,9 @@ from recipes.models import Recipe, SavedRecipe
 
 @login_required
 @require_POST
-def toggle_save_recipe(request, recipe_id):
+def toggle_save_recipe(request, pk):
     """Toggle save/unsave a recipe."""
-    recipe = get_object_or_404(Recipe, id=recipe_id)
+    recipe = get_object_or_404(Recipe, pk=pk)
     saved_recipe, created = SavedRecipe.objects.get_or_create(
         user=request.user,
         recipe=recipe
