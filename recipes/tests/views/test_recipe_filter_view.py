@@ -2,12 +2,13 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from recipes.models import Recipe, User
 
-class RecipeFilterViewTest(TestCase):
+
+class TestRecipeFilterView(TestCase):
     fixtures = ['other_users.json', 'sample_comment_data.json', 'recipes.json']
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.get(pk=2)  # Logged-in test user
+        self.user = User.objects.get(pk=2)
         self.client.force_login(self.user)
 
     def test_feed_filter_by_ingredient_single(self):
@@ -34,4 +35,3 @@ class RecipeFilterViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         for recipe in response.context['recipes']:
             self.assertIn(ingredient.lower(), recipe.ingredients.lower())
-

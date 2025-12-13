@@ -1,15 +1,14 @@
-import pytest
+from django.test import TestCase
 from recipes.models.user import User
 from recipes.models.recipe import Recipe
 
 
-@pytest.mark.django_db
-class TestLikeModel:
+class TestLikeModel(TestCase):
 
     def test_recipe_has_likes_field(self):
         """Ensure Recipe model contains a ManyToManyField named 'likes'."""
         recipe = Recipe()
-        assert hasattr(recipe, "likes")
+        self.assertTrue(hasattr(recipe, "likes"))
 
     def test_user_can_like_recipe(self):
         """User should be able to like a recipe."""
@@ -20,8 +19,8 @@ class TestLikeModel:
 
         recipe.likes.add(user)
 
-        assert user in recipe.likes.all()
-        assert recipe.likes.count() == 1
+        self.assertIn(user, recipe.likes.all())
+        self.assertEqual(recipe.likes.count(), 1)
 
     def test_user_can_unlike_recipe(self):
         """User can remove a like from a recipe."""
@@ -33,8 +32,8 @@ class TestLikeModel:
         recipe.likes.add(user)
         recipe.likes.remove(user)
 
-        assert user not in recipe.likes.all()
-        assert recipe.likes.count() == 0
+        self.assertNotIn(user, recipe.likes.all())
+        self.assertEqual(recipe.likes.count(), 0)
 
     def test_multiple_users_can_like_same_recipe(self):
         """More than one user may like a recipe."""
@@ -46,9 +45,9 @@ class TestLikeModel:
         recipe.likes.add(u1)
         recipe.likes.add(u2)
 
-        assert recipe.likes.count() == 2
-        assert u1 in recipe.likes.all()
-        assert u2 in recipe.likes.all()
+        self.assertEqual(recipe.likes.count(), 2)
+        self.assertIn(u1, recipe.likes.all())
+        self.assertIn(u2, recipe.likes.all())
 
     def test_like_does_not_duplicate(self):
         """Liking the same recipe twice does NOT create duplicates."""
@@ -58,4 +57,4 @@ class TestLikeModel:
         recipe.likes.add(user)
         recipe.likes.add(user)  # attempt to duplicate
 
-        assert recipe.likes.count() == 1
+        self.assertEqual(recipe.likes.count(), 1)
