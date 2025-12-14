@@ -39,6 +39,21 @@
     }
 
     /**
+     * Minimal, safe markdown rendering for trusted assistant content.
+     * Escapes HTML first, then applies bold/italic markers.
+     * @param {string} text
+     * @returns {string}
+     */
+    function renderMarkdownSafe(text) {
+        const escaped = escapeHtml(text || '');
+        // Bold: **text**
+        let html = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Italic: *text* (simple, non-greedy)
+        html = html.replace(/(^|[\s>_])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+        return html;
+    }
+
+    /**
      * Build HTML for a chat message.
      * @param {string} role - 'user' or 'assistant'
      * @param {string} content - The message content
@@ -57,8 +72,8 @@
             header = '<div class="fw-bold text-muted small mb-1"><span class="bi-robot"></span> AI Chef</div>';
         }
         
-        // For assistant messages, we allow HTML (for links). User content is always escaped.
-        const displayContent = (allowHtml && !isUser) ? content : escapeHtml(content);
+        // For assistant messages, allow trusted markdown/HTML; user content is always escaped.
+        const displayContent = (!isUser && allowHtml) ? renderMarkdownSafe(content) : escapeHtml(content);
 
         return `
             <div class="chat-message chat-message-${escapeHtml(role)} mb-3">
@@ -218,6 +233,12 @@
             return; // Elements not found, likely not on the chatbot page
         }
 
+        // Apply markdown rendering to any pre-rendered assistant messages
+        const existingAssistantMessages = document.querySelectorAll('.chat-message-assistant .message-content');
+        existingAssistantMessages.forEach(function(el) {
+            el.innerHTML = renderMarkdownSafe(el.textContent);
+        });
+
         // Handle chat form submission
         chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -292,10 +313,10 @@
                         buildMessageHTML('assistant', 'Sorry, an error occurred: ' + (parsed.error || 'Unknown error'), false)
                     );
                 } else {
-                    // Add assistant message (recipe text, no HTML links)
+                    // Add assistant message (recipe text, allow markdown formatting like **bold**)
                     if (parsed.message && parsed.message.content) {
                         chatTranscript.insertAdjacentHTML('beforeend', 
-                            buildMessageHTML('assistant', parsed.message.content, false)
+                            buildMessageHTML('assistant', parsed.message.content, true)
                         );
                     }
 

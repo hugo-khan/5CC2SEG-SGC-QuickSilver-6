@@ -41,24 +41,24 @@
         {% endif %}
       </div>
       {% if user.is_authenticated %}
-        {% if recipe.author == user %}
-          <div class="d-flex gap-2 mt-3">
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+          {% if recipe.author == user %}
             <a href="{% url 'recipe_edit' recipe.pk %}" class="btn btn-light">
               <i class="bi bi-pencil"></i> Edit Recipe
             </a>
             <a href="{% url 'recipe_delete' recipe.pk %}" class="btn btn-outline-danger">
               <i class="bi bi-trash"></i> Delete Recipe
             </a>
-          </div>
-        {% else %}
-          <form method="post" action="{% if is_following_author %}{% url 'unfollow_user' recipe.author.pk %}{% else %}{% url 'follow_user' recipe.author.pk %}{% endif %}" class="d-inline mt-3">
-            {% csrf_token %}
-            <button class="btn btn-light">
-              <i class="bi bi-{% if is_following_author %}person-dash{% else %}person-plus{% endif %}"></i>
-              {% if is_following_author %}Unfollow{% else %}Follow{% endif %} {{ recipe.author.username }}
-            </button>
-          </form>
-        {% endif %}
+          {% else %}
+            <form method="post" action="{% if is_following_author %}{% url 'unfollow_user' recipe.author.pk %}{% else %}{% url 'follow_user' recipe.author.pk %}{% endif %}" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-light">
+                <i class="bi bi-{% if is_following_author %}person-dash{% else %}person-plus{% endif %}"></i>
+                {% if is_following_author %}Unfollow{% else %}Follow{% endif %} {{ recipe.author.username }}
+              </button>
+            </form>
+          {% endif %}
+        </div>
       {% endif %}
     </div>
   </div>
