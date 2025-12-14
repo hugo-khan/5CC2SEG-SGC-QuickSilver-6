@@ -19,9 +19,7 @@ const {
     buildPublishSectionHTML
 } = require('./ai_chatbot.js');
 
-// =============================================================================
 // Tests for escapeHtml
-// =============================================================================
 
 describe('escapeHtml', () => {
     it('should escape ampersand', () => {
@@ -67,9 +65,7 @@ describe('escapeHtml', () => {
     });
 });
 
-// =============================================================================
 // Tests for buildMessageHTML
-// =============================================================================
 
 describe('buildMessageHTML', () => {
     it('should create user message with correct classes', () => {
@@ -116,9 +112,7 @@ describe('buildMessageHTML', () => {
     });
 });
 
-// =============================================================================
 // Tests for parseDraftResponse
-// =============================================================================
 
 describe('parseDraftResponse', () => {
     it('should return error for null input', () => {
@@ -183,9 +177,7 @@ describe('parseDraftResponse', () => {
     });
 });
 
-// =============================================================================
 // Tests for getCsrfToken
-// =============================================================================
 
 describe('getCsrfToken', () => {
     // Note: getCsrfToken relies on document.cookie and DOM elements
@@ -197,9 +189,7 @@ describe('getCsrfToken', () => {
     });
 });
 
-// =============================================================================
 // Tests for buildPublishSectionHTML
-// =============================================================================
 
 describe('buildPublishSectionHTML', () => {
     it('should return empty string for null draft', () => {

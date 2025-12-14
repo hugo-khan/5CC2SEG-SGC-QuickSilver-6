@@ -10,10 +10,7 @@ from django.urls import reverse, resolve
 from django.conf import settings
 
 
-# ==============================================================================
-# 1. Tests for asgi.py and wsgi.py
-# (Covers environment variable setup and application initialization)
-# ==============================================================================
+# Tests for asgi.py and wsgi.py (env setup and app init)
 
 class TestAppConfigCoverage(TestCase):
     """Tests for recipify/asgi.py and recipify/wsgi.py."""
@@ -61,13 +58,8 @@ class TestAppConfigCoverage(TestCase):
             del sys.modules['recipify.wsgi']
 
 
-# ==============================================================================
-# 2. Tests for settings.py
-# (Covers dynamic logic like GOOGLE_OAUTH_ENABLED)
-# ==============================================================================
-
-# Note: Django's test runner loads settings early. We must use a full
-# reload with mocked environment variables to test the GOOGLE_OAUTH_ENABLED logic.
+# Tests for settings.py (dynamic GOOGLE_OAUTH_ENABLED logic)
+# Note: Django's test runner loads settings early; use reload with mocked env.
 
 class TestProjectSettings(TestCase):
     """Tests for recipify/settings.py, focusing on dynamic logic."""
@@ -117,10 +109,7 @@ class TestProjectSettings(TestCase):
         self.assertIn(settings.BASE_DIR / "static", settings.STATICFILES_DIRS)
         
 
-# ==============================================================================
-# 3. Tests for urls.py
-# (Covers all defined URL patterns and the static file configuration)
-# ==============================================================================
+# Tests for urls.py (defined URL patterns and static config)
 
 # Mock the necessary views from the 'recipes' app to allow urls.py to import
 class MockView:

@@ -1,9 +1,4 @@
-"""
-Models for AI chatbot functionality.
-
-RecipeDraftSuggestion: Stores AI-generated recipe drafts before publishing.
-ChatMessage: Stores chat transcript between user and AI assistant.
-"""
+"""Models for AI chatbot drafts and chat history."""
 
 from django.conf import settings
 from django.db import models
@@ -11,14 +6,7 @@ from django.utils import timezone
 
 
 class RecipeDraftSuggestion(models.Model):
-    """
-    Stores AI-generated recipe suggestions before they are published.
-    
-    A draft can be:
-    - DRAFT: Generated but not yet published
-    - PUBLISHED: Successfully published as a Recipe
-    - FAILED: Generation or publishing failed
-    """
+    """Stores AI-generated recipe suggestions before they are published."""
     
     class Status(models.TextChoices):
         DRAFT = "DRAFT", "Draft"
@@ -75,13 +63,7 @@ class RecipeDraftSuggestion(models.Model):
 
 
 class ChatMessage(models.Model):
-    """
-    Stores individual chat messages in a conversation.
-    
-    Each message has a role:
-    - user: Message from the user
-    - assistant: Response from the AI
-    """
+    """Stores individual chat messages for a conversation."""
     
     class Role(models.TextChoices):
         USER = "user", "User"

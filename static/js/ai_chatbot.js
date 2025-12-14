@@ -13,9 +13,7 @@
 (function() {
     'use strict';
 
-    // =============================================================================
-    // Helper Functions (exported for testing)
-    // =============================================================================
+    // Helper functions (exported for testing)
 
     /**
      * Escape HTML special characters to prevent XSS.
@@ -190,9 +188,7 @@
         `;
     }
 
-    // =============================================================================
-    // Loading Status Updates
-    // =============================================================================
+    // Loading status updates
 
     var loadingStartTime = null;
     var loadingInterval = null;
@@ -239,9 +235,7 @@
         }
     }
 
-    // =============================================================================
-    // DOM Interaction (only runs in browser)
-    // =============================================================================
+    // DOM interaction (browser only)
 
     function initChatbot() {
         const chatForm = document.getElementById('chat-form');
@@ -457,9 +451,7 @@
         }
     }
 
-    // =============================================================================
-    // Module Exports (for Node.js testing)
-    // =============================================================================
+    // Module exports (for Node.js testing)
 
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = {

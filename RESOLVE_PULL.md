@@ -22,7 +22,7 @@ git status
 # 2. Open conflicted files and look for:
 # <<<<<<< HEAD
 # (your changes)
-# =======
+# (main's changes separator)
 # (main's changes)
 # >>>>>>> origin/main
 

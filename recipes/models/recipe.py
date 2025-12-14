@@ -8,12 +8,7 @@ from recipes.image_service import ImageService
 
 
 class Recipe(models.Model):
-    """
-    Unified Recipe model that keeps all fields from both branches so that:
-    - original timing/difficulty/publishing fields continue to work
-    - newer dietary/popularity fields are also available
-    - both naming schemes (`title`/`summary` and `name`/`description`) coexist
-    """
+    """Unified recipe model keeping legacy and new fields."""
 
     DIETARY_CHOICES = [
         ("vegan", "Vegan"),
@@ -102,18 +97,11 @@ class Recipe(models.Model):
         ordering = ["-created_at", "-date_posted"]
 
     def __str__(self) -> str:
-        """
-        Prefer the newer `name` field for consistency with the newer admin/views,
-        but fall back to `title` if needed.
-        """
+        """Prefer name over title when available."""
         return self.name or self.title
 
     def save(self, *args, **kwargs):
-        """
-        - Ensure updated_at always set
-        - Compress new uploaded images
-        - Delete old image if replaced or cleared
-        """
+        """Compress new images, bump updated_at, and drop replaced images."""
 
         # Capture old image before potential replacement
         old_image = None
@@ -138,10 +126,7 @@ class Recipe(models.Model):
 
     @property
     def total_time_minutes(self) -> int:
-        """
-        Total time in minutes, preferring the unified `cooking_time` field
-        if it is set, otherwise falling back to prep + cook time.
-        """
+        """Return total time preferring cooking_time else prep + cook."""
         if self.cooking_time:
             return self.cooking_time
 
@@ -151,15 +136,11 @@ class Recipe(models.Model):
 
     @property
     def created_by(self):
-        """
-        Backwards-compatible alias for code that expects `created_by`.
-        """
+        """Backwards-compatible alias for code expecting created_by."""
         return self.author
 
     def get_share_url(self, request):
-        """
-        Generate a shareable URL for this recipe.
-        """
+        """Generate a shareable URL for this recipe."""
         from django.urls import reverse
         return request.build_absolute_uri(
             reverse('recipe_share', kwargs={'share_token': self.share_token})

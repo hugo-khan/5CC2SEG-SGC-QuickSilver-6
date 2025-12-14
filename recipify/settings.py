@@ -223,25 +223,19 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
-# =============================================================================
-# Cache Configuration (for AI recipe service)
-# =============================================================================
-# Using local-memory cache by default (no external service needed)
-# For production, consider database cache or memcached
+# Cache configuration for AI recipe service
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'recipify-cache',
-        'TIMEOUT': 86400 * 3,  # 3 days default TTL
+        'TIMEOUT': 86400 * 3,  # 3 days
         'OPTIONS': {
             'MAX_ENTRIES': 500,  # Limit memory usage
         }
     }
 }
 
-# =============================================================================
-# Logging Configuration (for AI profiling)
-# =============================================================================
+# Logging configuration for AI profiling
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
