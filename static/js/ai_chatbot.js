@@ -39,15 +39,30 @@
     }
 
     /**
-     * Minimal, safe markdown rendering for trusted assistant content.
-     * Escapes HTML first, then applies bold/italic markers.
-     * @param {string} text
-     * @returns {string}
+     * Render assistant content while allowing limited, trusted HTML (anchors).
+     * - Escapes HTML
+     * - Re-hydrates safe <a> tags
+     * - Applies minimal markdown (**bold**, *italic*)
      */
-    function renderMarkdownSafe(text) {
+    function renderAssistantContent(text) {
         const escaped = escapeHtml(text || '');
+
+        // Allow only safe <a href="..."> links (http, https, or relative)
+        const withLinks = escaped.replace(/&lt;a\s+[^&]*href="([^"]+)"[^&]*&gt;(.*?)&lt;\/a&gt;/gi, function(_, href, linkText) {
+            const safeHref = (href || '').trim();
+            const lowerHref = safeHref.toLowerCase();
+
+            // Block javascript or data URIs
+            const isSafeProtocol = lowerHref.startsWith('http://') || lowerHref.startsWith('https://') || lowerHref.startsWith('/');
+            if (!isSafeProtocol || lowerHref.startsWith('javascript:') || lowerHref.startsWith('data:')) {
+                return linkText; // drop the link, keep text
+            }
+
+            return `<a href="${escapeHtml(safeHref)}" class="fw-bold">${linkText}</a>`;
+        });
+
         // Bold: **text**
-        let html = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        let html = withLinks.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         // Italic: *text* (simple, non-greedy)
         html = html.replace(/(^|[\s>_])\*([^*\n]+)\*/g, '$1<em>$2</em>');
         return html;
@@ -72,8 +87,8 @@
             header = '<div class="fw-bold text-muted small mb-1"><span class="bi-robot"></span> AI Chef</div>';
         }
         
-        // For assistant messages, allow trusted markdown/HTML; user content is always escaped.
-        const displayContent = (!isUser && allowHtml) ? renderMarkdownSafe(content) : escapeHtml(content);
+        // For assistant messages, allow limited HTML/markdown; user content is always escaped.
+        const displayContent = (!isUser && allowHtml) ? renderAssistantContent(content) : escapeHtml(content);
 
         return `
             <div class="chat-message chat-message-${escapeHtml(role)} mb-3">

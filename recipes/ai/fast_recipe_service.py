@@ -1,26 +1,4 @@
-"""
-Fast Recipe Service - Optimized AI recipe generation.
-
-This module replaces the CrewAI multi-agent pipeline with a single LLM call
-for dramatically improved response times (~10s vs ~40-45s).
-
-Key optimizations:
-1. Single LLM call (vs 2+ with CrewAI agents)
-2. Direct Serper API with timeout and result limits
-3. JSON-only output with capped lengths
-4. Django cache for both search and LLM results
-
-Usage:
-    from recipes.ai.fast_recipe_service import suggest_recipe
-    
-    result = suggest_recipe("chicken pasta", dietary="gluten-free")
-    # result = {
-    #     "display_text": "...",
-    #     "form_fields": {...},
-    #     "raw_json": {...},
-    #     "metadata": {"timing_ms": ..., "cache_hit": False, ...}
-    # }
-"""
+"""Single-call AI recipe generator with optional web search and caching."""
 
 import hashlib
 import json
@@ -41,10 +19,7 @@ from recipes.ai.profiling import (
 logger = logging.getLogger(__name__)
 
 
-# =============================================================================
-# Configuration
-# =============================================================================
-
+# Tunable settings for the fast recipe service
 class FastRecipeConfig:
     """Configuration for the fast recipe service. All values are tunable."""
     
@@ -74,10 +49,6 @@ class FastRecipeConfig:
 config = FastRecipeConfig()
 
 
-# =============================================================================
-# Exceptions
-# =============================================================================
-
 class FastRecipeError(Exception):
     """Base exception for fast recipe service."""
     pass
@@ -93,10 +64,7 @@ class LLMError(FastRecipeError):
     pass
 
 
-# =============================================================================
-# Caching Utilities
-# =============================================================================
-
+# Build a deterministic cache key for recipe responses
 def _make_cache_key(prefix: str, *args: str) -> str:
     """Create a deterministic cache key from arguments."""
     content = "|".join(str(a).lower().strip() for a in args)
@@ -104,6 +72,7 @@ def _make_cache_key(prefix: str, *args: str) -> str:
     return f"{config.CACHE_PREFIX}:{prefix}:{hash_val}"
 
 
+# Read from cache if enabled
 def _get_cached(key: str) -> Optional[Dict]:
     """Get value from cache if enabled."""
     if not config.CACHE_ENABLED:
@@ -115,6 +84,7 @@ def _get_cached(key: str) -> Optional[Dict]:
         return None
 
 
+# Write to cache if enabled
 def _set_cached(key: str, value: Dict) -> None:
     """Set value in cache if enabled."""
     if not config.CACHE_ENABLED:
@@ -125,10 +95,7 @@ def _set_cached(key: str, value: Dict) -> None:
         logger.warning(f"Cache set failed: {e}")
 
 
-# =============================================================================
-# Serper Search (Fast Path)
-# =============================================================================
-
+# Fetch quick Serper snippets for a recipe query
 def search_recipes_serper(query: str) -> Tuple[str, bool]:
     """
     Search for recipe information using Serper API.
@@ -201,10 +168,7 @@ def search_recipes_serper(query: str) -> Tuple[str, bool]:
             return "Search error - generating recipe from AI knowledge only.", False
 
 
-# =============================================================================
-# LLM Call (Single Call)
-# =============================================================================
-
+# Build the single-call prompt for the LLM
 def _build_recipe_prompt(
     user_prompt: str,
     dietary: str,
@@ -261,6 +225,7 @@ CRITICAL REQUIREMENTS:
 DO NOT use placeholder values. Calculate each time/serving based on the specific recipe."""
 
 
+# Call OpenAI chat completions and parse JSON
 def _call_openai(prompt: str) -> Dict:
     """
     Make a single OpenAI API call and return parsed JSON.
@@ -323,10 +288,7 @@ def _call_openai(prompt: str) -> Dict:
             raise LLMError(f"Unexpected OpenAI response format: {e}")
 
 
-# =============================================================================
-# Formatting (Pure Python - No LLM)
-# =============================================================================
-
+# Render recipe JSON into display text
 def _format_display_text(recipe_json: Dict) -> str:
     """
     Format recipe JSON into a human-readable display string.
@@ -384,6 +346,7 @@ def _format_display_text(recipe_json: Dict) -> str:
     return "\n".join(lines)
 
 
+# Convert recipe JSON to Django form fields
 def _format_form_fields(recipe_json: Dict) -> Dict:
     """
     Convert recipe JSON to Django form field format.
@@ -420,33 +383,13 @@ def _format_form_fields(recipe_json: Dict) -> Dict:
     }
 
 
-# =============================================================================
-# Main Entry Point
-# =============================================================================
-
+# Main entry: generate a recipe suggestion (uses cache when possible)
 def suggest_recipe(
     prompt: str,
     dietary: str = "",
     skip_cache: bool = False,
 ) -> Dict[str, Any]:
-    """
-    Generate a recipe suggestion with optimized performance.
-    
-    Args:
-        prompt: User's recipe request
-        dietary: Optional dietary requirements
-        skip_cache: If True, bypass cache (for testing)
-    
-    Returns:
-        Dict with keys:
-            - display_text: Formatted text for chat display
-            - form_fields: Dict matching Django Recipe form fields
-            - raw_json: The raw recipe JSON from LLM
-            - metadata: Dict with timing, cache_hit, used_retrieval, etc.
-    
-    Raises:
-        FastRecipeError: If API keys not configured or LLM fails
-    """
+    """Generate a recipe suggestion quickly; uses cache when possible."""
     # Initialize profiling
     clear_profile()
     start_wall_clock()
@@ -525,26 +468,9 @@ def suggest_recipe(
     return result
 
 
-# =============================================================================
-# Publishing (Pure Python - No LLM)
-# =============================================================================
-
+# Persist a recipe to the database from validated fields
 def publish_recipe_from_fields(form_fields: Dict, user) -> "Recipe":
-    """
-    Publish a recipe from form fields to the database.
-    
-    This is pure Python validation + DB write. No LLM call.
-    
-    Args:
-        form_fields: Dict with recipe data (from suggest_recipe)
-        user: Django User instance
-    
-    Returns:
-        Created Recipe instance
-    
-    Raises:
-        FastRecipeError: If validation fails
-    """
+    """Persist a recipe from form fields without any LLM involvement."""
     from recipes.models import Recipe
     
     with profile_stage("db_write"):
