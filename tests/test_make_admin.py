@@ -20,7 +20,8 @@ class TestMakeAdminScript(TestCase):
             output = io.StringIO()
             with patch("sys.stdout", output):
                 importlib.invalidate_caches()
-                import make_admin   # runs on import
+                module = importlib.import_module("make_admin")
+                module.main()
         return output.getvalue()
 
     def test_make_user_admin(self):

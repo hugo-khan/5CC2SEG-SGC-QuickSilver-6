@@ -1,8 +1,10 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 from recipes.models import Recipe
-from ai_chat.models import RecipeDraftSuggestion, ChatMessage
+from recipes.models.ai_chat import RecipeDraftSuggestion, ChatMessage
+
+User = get_user_model()
 
 
 class RecipeDraftSuggestionTests(TestCase):

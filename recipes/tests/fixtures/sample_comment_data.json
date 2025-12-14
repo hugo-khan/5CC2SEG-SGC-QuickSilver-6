@@ -4,9 +4,15 @@
     "pk": 1,
     "fields": {
       "title": "Chocolate Cake",
+      "name": "Chocolate Cake",
       "description": "Delicious cake",
       "instructions": "Mix, bake, eat",
-      "author": 2
+      "ingredients": "flour,sugar,cocoa powder,butter,eggs",
+      "is_published": true,
+      "author": 2,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {

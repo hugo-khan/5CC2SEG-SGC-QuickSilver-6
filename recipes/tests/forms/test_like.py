@@ -1,64 +1,58 @@
-import pytest
+from django.test import TestCase
 from django.urls import reverse
-from recipes.models.user import User
-from recipes.models.recipe import Recipe
+
+from recipes.models import User, Recipe
 
 
-@pytest.mark.django_db
-class TestToggleLikeView:
-
-    def setup_method(self):
+class TestToggleLikeView(TestCase):
+    def setUp(self):
         self.user = User.objects.create_user(
             username="@testuser",
             email="test@example.com",
-            password="password123"
+            password="password123",
         )
         self.recipe = Recipe.objects.create(
+            author=self.user,
             title="Test Recipe",
-            description="A simple test recipe."
+            name="Test Recipe",
+            description="A simple test recipe.",
+            ingredients="a,b",
+            instructions="mix",
+            is_published=True,
         )
+        self.url = reverse("toggle_like", args=[self.recipe.id])
 
-    def test_user_can_like_recipe(self, client):
-        """User can like a recipe."""
-        client.login(username="@testuser", password="password123")
-        url = reverse("toggle_like", args=[self.recipe.id])
+    def test_user_can_like_recipe(self):
+        """Authenticated user can like a recipe."""
+        self.client.login(username="@testuser", password="password123")
 
-        response = client.post(url)
+        response = self.client.post(self.url)
 
-        # Assertions
-        assert response.status_code == 302   # should redirect back
-        assert self.user in self.recipe.likes.all()
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(self.user, self.recipe.likes.all())
 
-    def test_user_can_unlike_recipe(self, client):
-        """User can unlike liked recipe"""
+    def test_user_can_unlike_recipe(self):
+        """Authenticated user can unlike a recipe they've liked."""
         self.recipe.likes.add(self.user)
-        client.login(username="@testuser", password="password123")
-        url = reverse("toggle_like", args=[self.recipe.id])
+        self.client.login(username="@testuser", password="password123")
 
-        response = client.post(url)
+        response = self.client.post(self.url)
 
-        # Assertions
-        assert response.status_code == 302
-        assert self.user not in self.recipe.likes.all()
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn(self.user, self.recipe.likes.all())
 
-    def test_unauthenticated_user_cannot_like(self, client):
+    def test_unauthenticated_user_cannot_like(self):
         """Guests can't like a recipe."""
-        url = reverse("toggle_like", args=[self.recipe.id])
+        response = self.client.post(self.url)
 
-        response = client.post(url)
+        self.assertIn(response.status_code, (301, 302))
+        self.assertEqual(self.recipe.likes.count(), 0)
 
+    def test_like_toggle_prevents_duplicates(self):
+        """Toggling twice should unlike and leave zero likes."""
+        self.client.login(username="@testuser", password="password123")
 
-        assert response.status_code in (302, 301)
-        assert self.recipe.likes.count() == 0
+        self.client.post(self.url)  # like
+        self.client.post(self.url)  # unlike
 
-    def test_like_does_not_create_duplicates(self, client):
-        """Repeated liking shouldn't create multiple likes"""
-        client.login(username="@testuser", password="password123")
-        url = reverse("toggle_like", args=[self.recipe.id])
-
-        # Like twice check
-        client.post(url)
-        client.post(url)
-
-
-        assert self.recipe.likes.count() == 0
+        self.assertEqual(self.recipe.likes.count(), 0)

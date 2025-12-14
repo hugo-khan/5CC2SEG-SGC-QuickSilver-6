@@ -11,6 +11,7 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'recipify.settings')
-
+# Always set DJANGO_SETTINGS_MODULE on import (tests may clear env)
+if os.environ.get("DJANGO_SETTINGS_MODULE") != "recipify.settings":
+    os.environ["DJANGO_SETTINGS_MODULE"] = "recipify.settings"
 application = get_wsgi_application()

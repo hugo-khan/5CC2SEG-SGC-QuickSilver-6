@@ -5,9 +5,23 @@ from recipes.models.recipe import Recipe
 
 class TestLikeModel(TestCase):
 
+    def _create_recipe(self, author=None):
+        user = author or User.objects.create_user(
+            username="@author", email="author@example.com", password="pass123"
+        )
+        return Recipe.objects.create(
+            author=user,
+            title="Test",
+            name="Test",
+            description="test",
+            ingredients="a,b",
+            instructions="mix",
+            is_published=True,
+        )
+
     def test_recipe_has_likes_field(self):
         """Ensure Recipe model contains a ManyToManyField named 'likes'."""
-        recipe = Recipe()
+        recipe = self._create_recipe()
         self.assertTrue(hasattr(recipe, "likes"))
 
     def test_user_can_like_recipe(self):
@@ -15,7 +29,7 @@ class TestLikeModel(TestCase):
         user = User.objects.create_user(
             username="@u1", email="u1@example.com", password="pass123"
         )
-        recipe = Recipe.objects.create(title="Test", description="test")
+        recipe = self._create_recipe(user)
 
         recipe.likes.add(user)
 
@@ -40,7 +54,7 @@ class TestLikeModel(TestCase):
         u1 = User.objects.create_user(username="@u1", email="a@a.com", password="123")
         u2 = User.objects.create_user(username="@u2", email="b@b.com", password="123")
 
-        recipe = Recipe.objects.create(title="Test", description="test")
+        recipe = self._create_recipe(u1)
 
         recipe.likes.add(u1)
         recipe.likes.add(u2)
@@ -52,7 +66,7 @@ class TestLikeModel(TestCase):
     def test_like_does_not_duplicate(self):
         """Liking the same recipe twice does NOT create duplicates."""
         user = User.objects.create_user(username="@u1", email="a@a.com", password="123")
-        recipe = Recipe.objects.create(title="Test", description="test")
+        recipe = self._create_recipe(user)
 
         recipe.likes.add(user)
         recipe.likes.add(user)  # attempt to duplicate

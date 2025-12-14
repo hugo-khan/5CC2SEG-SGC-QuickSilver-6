@@ -69,7 +69,9 @@ class RecipeDraftSuggestion(models.Model):
     
     def __str__(self):
         title = self.draft_payload.get("title", "Untitled")
-        return f"Draft: {title} ({self.status})"
+        # Use human-readable status label for display
+        status_label = self.get_status_display() if hasattr(self, "get_status_display") else self.status
+        return f"Draft: {title} ({status_label})"
 
 
 class ChatMessage(models.Model):

@@ -32,12 +32,12 @@ class Recipe(models.Model):
 
     # Core content (keep both naming conventions)
     title = models.CharField(max_length=200)
-    summary = models.CharField(max_length=255, blank=True)
-    ingredients = models.TextField(help_text="List ingredients separated by commas")
-    instructions = models.TextField()
+    summary = models.CharField(max_length=255, blank=True, default="")
+    ingredients = models.TextField(help_text="List ingredients separated by commas", blank=True, default="")
+    instructions = models.TextField(blank=True, default="")
 
-    name = models.CharField(max_length=255)
-    description = models.TextField()
+    name = models.CharField(max_length=255, blank=True, default="")
+    description = models.TextField(blank=True, default="")
 
     # Time & servings
     prep_time_minutes = models.PositiveIntegerField(blank=True, null=True)
@@ -60,15 +60,17 @@ class Recipe(models.Model):
     )
 
     # Newer dietary/popularity fields
-    date_posted = models.DateTimeField(auto_now_add=True)
+    # Allow fixtures or auto timestamp
+    date_posted = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     dietary_requirement = models.CharField(
         max_length=50, choices=DIETARY_CHOICES, default="none"
     )
     popularity = models.IntegerField(default=0)
 
     # Timestamps
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False, null=True, blank=True)
+    # Allow null/default for legacy fixtures; updated on save.
+    updated_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
     # Sharing
     share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -105,6 +107,11 @@ class Recipe(models.Model):
         but fall back to `title` if needed.
         """
         return self.name or self.title
+
+    def save(self, *args, **kwargs):
+        # Ensure updated_at always set
+        self.updated_at = timezone.now()
+        super().save(*args, **kwargs)
 
     @property
     def total_time_minutes(self) -> int:

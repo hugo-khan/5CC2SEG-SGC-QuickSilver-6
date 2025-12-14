@@ -4,6 +4,7 @@
     "pk": 1,
     "fields": {
       "title": "Chocolate Cake",
+      "name": "Chocolate Cake",
       "description": "Delicious chocolate cake",
       "instructions": "Mix ingredients and bake",
       "ingredients": "flour,sugar,cocoa powder,butter,eggs",
@@ -11,7 +12,10 @@
       "cook_time_minutes": 35,
       "servings": 8,
       "is_published": true,
-      "author": 2
+      "author": 2,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -19,6 +23,7 @@
     "pk": 2,
     "fields": {
       "title": "Vanilla Cupcakes",
+      "name": "Vanilla Cupcakes",
       "description": "Light vanilla cupcakes",
       "instructions": "Mix, bake, cool",
       "ingredients": "flour,sugar,butter,eggs,vanilla extract",
@@ -26,7 +31,10 @@
       "cook_time_minutes": 20,
       "servings": 12,
       "is_published": true,
-      "author": 3
+      "author": 3,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -34,6 +42,7 @@
     "pk": 3,
     "fields": {
       "title": "Strawberry Smoothie",
+      "name": "Strawberry Smoothie",
       "description": "Fresh strawberry smoothie",
       "instructions": "Blend all ingredients",
       "ingredients": "strawberries,milk,honey,ice",
@@ -41,7 +50,10 @@
       "cook_time_minutes": 0,
       "servings": 2,
       "is_published": true,
-      "author": 4
+      "author": 4,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -49,6 +61,7 @@
     "pk": 4,
     "fields": {
       "title": "Banana Pancakes",
+      "name": "Banana Pancakes",
       "description": "Fluffy banana pancakes",
       "instructions": "Mix ingredients and fry",
       "ingredients": "flour,eggs,milk,bananas,butter",
@@ -56,7 +69,10 @@
       "cook_time_minutes": 15,
       "servings": 4,
       "is_published": true,
-      "author": 2
+      "author": 2,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -64,6 +80,7 @@
     "pk": 5,
     "fields": {
       "title": "Fruit Salad",
+      "name": "Fruit Salad",
       "description": "Healthy fruit salad",
       "instructions": "Chop and mix all fruits",
       "ingredients": "strawberries,bananas,apples,oranges,honey",
@@ -71,7 +88,10 @@
       "cook_time_minutes": 0,
       "servings": 3,
       "is_published": true,
-      "author": 3
+      "author": 3,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   },
   {
@@ -79,6 +99,7 @@
     "pk": 6,
     "fields": {
       "title": "Spaghetti Bolognese",
+      "name": "Spaghetti Bolognese",
       "description": "A hearty pasta dish with rich meat sauce",
       "instructions": "Cook spaghetti. Make sauce by simmering meat, tomatoes, onions, garlic, and spices.",
       "ingredients": "spaghetti,ground beef,tomato sauce,onion,garlic,olive oil,oregano,parsley,parmesan cheese",
@@ -86,7 +107,10 @@
       "cook_time_minutes": 40,
       "servings": 4,
       "is_published": true,
-      "author": 2
+      "author": 2,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
     }
   }
 ]

@@ -40,7 +40,15 @@
     "pk": 20,
     "fields": {
       "title": "Chocolate Cake",
+      "name": "Chocolate Cake",
       "description": "Simple chocolate cake recipe",
+      "ingredients": "flour,sugar,cocoa powder,butter,eggs",
+      "instructions": "Mix ingredients and bake",
+      "is_published": true,
+      "author": 10,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z",
       "likes": [10, 11]
     }
   },
@@ -49,7 +57,15 @@
     "pk": 21,
     "fields": {
       "title": "Pasta Bolognese",
+      "name": "Pasta Bolognese",
       "description": "Classic Italian pasta dish",
+      "ingredients": "pasta,meat,tomato,onion,garlic",
+      "instructions": "Cook pasta and make sauce",
+      "is_published": true,
+      "author": 11,
+      "date_posted": "2024-01-01T00:00:00Z",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z",
       "likes": []
     }
   }
