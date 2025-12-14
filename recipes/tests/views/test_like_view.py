@@ -1,62 +1,63 @@
-import pytest
+from django.test import TestCase
 from django.urls import reverse
-
-from recipes.models.recipe import recipe
-from recipes.models.user import User
+from recipes.models import User, Recipe
 
 
-@pytest.mark.django_db
-class TestToggleLikeView:
-
-    def setup_method(self):
+class TestToggleLikeView(TestCase):
+    def setUp(self):
         self.user = User.objects.create_user(
-            username="@testuser", email="test@example.com", password="password123"
+            username="@testuser",
+            email="test@example.com",
+            password="password123",
         )
         self.recipe = Recipe.objects.create(
-            title="Test Recipe", description="A simple test recipe."
+            author=self.user,
+            title="Test Recipe",
+            name="Test Recipe",
+            description="A simple test recipe.",
+            ingredients="a,b",
+            instructions="mix",
+            is_published=True,
         )
         self.url = reverse("toggle_like", args=[self.recipe.id])
 
-    def test_authenticated_user_can_like_recipe(self, client):
-        client.login(username="@testuser", password="password123")
+    def test_authenticated_user_can_like_recipe(self):
+        self.client.login(username="@testuser", password="password123")
 
-        response = client.post(self.url)
+        response = self.client.post(self.url)
 
-        assert response.status_code == 302
-        assert self.user in self.recipe.likes.all()
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(self.user, self.recipe.likes.all())
 
-    def test_authenticated_user_can_unlike_recipe(self, client):
+    def test_authenticated_user_can_unlike_recipe(self):
         self.recipe.likes.add(self.user)
-        client.login(username="@testuser", password="password123")
+        self.client.login(username="@testuser", password="password123")
 
-        response = client.post(self.url)
+        response = self.client.post(self.url)
 
-        assert response.status_code == 302
-        assert self.user not in self.recipe.likes.all()
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn(self.user, self.recipe.likes.all())
 
-    def test_unauthenticated_user_redirected(self, client):
-        response = client.post(self.url)
+    def test_unauthenticated_user_redirected(self):
+        response = self.client.post(self.url)
 
-        # Should redirect to login page
-        assert response.status_code in (301, 302)
-        assert self.recipe.likes.count() == 0
+        self.assertIn(response.status_code, (301, 302))
+        self.assertEqual(self.recipe.likes.count(), 0)
 
-    def test_liking_twice_toggles_like(self, client):
-        client.login(username="@testuser", password="password123")
+    def test_liking_twice_toggles_like(self):
+        self.client.login(username="@testuser", password="password123")
 
-        # First click: like
-        client.post(self.url)
-        assert self.user in self.recipe.likes.all()
+        self.client.post(self.url)  # like
+        self.assertIn(self.user, self.recipe.likes.all())
 
-        # Second click: unlike
-        client.post(self.url)
-        assert self.user not in self.recipe.likes.all()
+        self.client.post(self.url)  # unlike
+        self.assertNotIn(self.user, self.recipe.likes.all())
 
-    def test_redirect_back_to_recipe_page(self, client):
+    def test_redirect_back_to_recipe_page(self):
         """Check the view redirects back to the recipe page or feed."""
-        client.login(username="@testuser", password="password123")
+        self.client.login(username="@testuser", password="password123")
 
-        response = client.post(self.url)
+        response = self.client.post(self.url)
 
-        assert response.status_code == 302
-        assert response.url is not None  # Should redirect to a real page
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url)

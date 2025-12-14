@@ -1,13 +1,14 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.test import TestCase
+from recipes.models import Recipe, SavedRecipe
 from saved_recipes.models import SavedRecipe
 
-from recipes.models import Recipe
 
+User = get_user_model()
 
 class SavedRecipeModelTests(TestCase):
-    fixtures = ["recipes.json"]
+    fixtures = ["default_user.json", "other_users.json", "recipes.json"]
 
     def setUp(self):
         self.user = User.objects.create_user(username="alice", password="password123")

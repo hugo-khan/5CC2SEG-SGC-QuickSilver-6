@@ -16,3 +16,4 @@ sqlparse==0.5.3
 # AI Chatbot dependencies (CrewAI)
 crewai>=0.80.0
 crewai-tools>=0.14.0
+quickjs==1.19.4

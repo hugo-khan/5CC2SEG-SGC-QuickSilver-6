@@ -1,22 +1,4 @@
-"""
-Lightweight profiling utilities for AI service performance measurement.
-
-Usage:
-    from recipes.ai.profiling import profile_stage, get_profile_summary
-
-    with profile_stage("serper_search"):
-        # ... code to profile
-
-    summary = get_profile_summary()
-
-Enhanced Profiling:
-    The profiling system now tracks:
-    - Individual stage timings
-    - Total wall clock time
-    - LLM call counts
-    - Cache hit/miss counts
-    - Detailed breakdown for debugging
-"""
+"""Minimal profiling helpers for AI services."""
 
 import logging
 import time
@@ -96,17 +78,7 @@ def increment_counter(name: str, amount: int = 1) -> None:
 
 @contextmanager
 def profile_stage(name: str, metadata: Optional[Dict] = None):
-    """
-    Context manager to profile a code section.
-
-    Args:
-        name: Human-readable name for this stage
-        metadata: Optional dict of additional info to log
-
-    Example:
-        with profile_stage("llm_call", {"model": "gpt-4o-mini"}):
-            result = call_llm(prompt)
-    """
+    """Profile a code section; writes entry on exit."""
     from django.conf import settings
 
     entry = ProfileEntry(
@@ -128,17 +100,7 @@ def profile_stage(name: str, metadata: Optional[Dict] = None):
 
 
 def get_profile_summary() -> Dict[str, Any]:
-    """
-    Get a summary of all profiled stages.
-
-    Returns:
-        Dict with:
-            - stages: list of {name, duration_ms, metadata}
-            - total_ms: sum of all stage durations
-            - wall_ms: actual wall clock time
-            - slowest: name of slowest stage
-            - counters: dict of operation counters
-    """
+    """Summarize all collected profiling entries and counters."""
     entries = _get_profile_list()
     counters = _get_counters()
 
@@ -181,12 +143,7 @@ def get_profile_summary() -> Dict[str, Any]:
 
 
 def log_profile_table() -> str:
-    """
-    Generate a formatted table of profiling data.
-
-    Returns:
-        Formatted string table suitable for logging.
-    """
+    """Return profiling data as a formatted string table."""
     summary = get_profile_summary()
 
     if not summary["stages"]:

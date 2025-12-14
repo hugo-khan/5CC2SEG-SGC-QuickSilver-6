@@ -1,4 +1,4 @@
-from django.contrib.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
@@ -9,6 +9,7 @@ from recipes.models import Comment, Recipe
 class CommentDeleteViewTests(TestCase):
 
     def setUp(self):
+        User = get_user_model()
         self.author = User.objects.create_user(username="author", password="pass123")
         self.other_user = User.objects.create_user(
             username="otheruser", password="pass123"

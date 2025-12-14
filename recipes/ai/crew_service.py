@@ -1,16 +1,4 @@
-"""
-CrewAI service module for AI-powered recipe suggestions.
-
-This module implements a 3-agent sequential workflow:
-1. Recipe Researcher (RAG) - Retrieves and synthesizes recipes from web sources
-2. Formatter/UX Writer - Converts structured data to user-friendly format
-3. Publisher Agent - Handles recipe publishing to the database
-
-All external API calls are isolated here for easy mocking in tests.
-
-NOTE: This module is being replaced by fast_recipe_service.py for better performance.
-The profiling code below helps measure where time is spent.
-"""
+"""Legacy CrewAI workflow for recipe suggestions (kept for compatibility)."""
 
 import json
 import logging
@@ -54,11 +42,7 @@ def _get_crewai_components():
     return Agent, Task, Crew, Process, tool, SerperDevTool
 
 
-# =============================================================================
-# Custom Tools
-# =============================================================================
-
-
+# Build a Serper-backed web search tool for recipe lookups
 def _create_recipe_web_search_tool():
     """Create the recipe web search tool using crewai decorators."""
     from recipes.ai.config import SERPER_API_KEY
@@ -83,18 +67,9 @@ def _create_recipe_web_search_tool():
     return recipe_web_search
 
 
-# =============================================================================
-# Agent Definitions
-# =============================================================================
-
-
+# Agent that performs recipe research with RAG
 def create_recipe_researcher():
-    """
-    Agent 1: Recipe Research & Culinary Planner
-
-    Responsible for retrieving relevant recipe sources using web search
-    and synthesizing a coherent recipe that meets dietary constraints.
-    """
+    """Create the researcher agent used for RAG lookups."""
     Agent, _, _, _, _, _ = _get_crewai_components()
     recipe_web_search = _create_recipe_web_search_tool()
 
@@ -119,14 +94,9 @@ def create_recipe_researcher():
     )
 
 
+# Agent that formats recipe output for chat and forms
 def create_formatter_agent():
-    """
-    Agent 2: Cookbook Editor & UX Writer
-
-    Responsible for converting structured recipe data into:
-    1. A polished chat response for display
-    2. Django-form-ready field mapping
-    """
+    """Create the formatting agent that rewrites the recipe output."""
     Agent, _, _, _, _, _ = _get_crewai_components()
 
     return Agent(
@@ -149,13 +119,9 @@ def create_formatter_agent():
     )
 
 
+# Agent that validates and publishes recipes
 def create_publisher_agent():
-    """
-    Agent 3: Publishing Assistant
-
-    Responsible for validating and publishing recipes to the database.
-    Only publishes when explicitly requested by the user.
-    """
+    """Create the agent that validates and publishes recipes."""
     Agent, _, _, _, _, _ = _get_crewai_components()
 
     return Agent(
@@ -177,11 +143,7 @@ def create_publisher_agent():
     )
 
 
-# =============================================================================
-# Task Definitions
-# =============================================================================
-
-
+# Task for researching and drafting a recipe
 def create_research_task(prompt: str, dietary_requirements: str, researcher):
     """Create the recipe research task."""
     _, Task, _, _, _, _ = _get_crewai_components()
@@ -232,6 +194,7 @@ Output MUST be valid JSON with this exact structure:
     )
 
 
+# Task for formatting the recipe output
 def create_format_task(formatter):
     """Create the formatting task."""
     _, Task, _, _, _, _ = _get_crewai_components()
@@ -282,11 +245,6 @@ Output MUST be valid JSON with this structure:
     )
 
 
-# =============================================================================
-# Main Service Functions
-# =============================================================================
-
-
 class CrewServiceError(Exception):
     """Custom exception for crew service errors."""
 
@@ -294,23 +252,7 @@ class CrewServiceError(Exception):
 
 
 def run_suggestion(prompt: str, dietary_requirements: str = "") -> dict[str, Any]:
-    """
-    Run the recipe suggestion crew workflow.
-
-    Args:
-        prompt: User's recipe request
-        dietary_requirements: Optional dietary restrictions
-
-    Returns:
-        dict with keys:
-            - assistant_display: Formatted response for chat
-            - form_fields: Dict matching Recipe form fields
-            - raw: Raw output from the crew
-            - _profile: Profiling data (if DEBUG)
-
-    Raises:
-        CrewServiceError: If the workflow fails or keys are not configured
-    """
+    """Run the CrewAI suggestion workflow and return display/form payloads."""
     import os
 
     from django.conf import settings
@@ -386,10 +328,7 @@ def run_suggestion(prompt: str, dietary_requirements: str = "") -> dict[str, Any
 
 
 def _parse_crew_output(output: str) -> dict:
-    """
-    Parse the crew output to extract structured data.
-    Handles various output formats the LLM might produce.
-    """
+    """Parse CrewAI output into structured data or fall back to raw text."""
     # Try to find JSON in the output
     import re
 
@@ -421,21 +360,7 @@ def _parse_crew_output(output: str) -> dict:
 
 
 def publish_from_draft(draft, user) -> dict[str, Any]:
-    """
-    Publish a recipe from a stored draft.
-
-    Args:
-        draft: RecipeDraftSuggestion instance
-        user: User instance (must match draft.user)
-
-    Returns:
-        dict with keys:
-            - recipe: The created Recipe instance
-            - recipe_url: URL to the recipe detail page
-
-    Raises:
-        CrewServiceError: If publishing fails or user doesn't own draft
-    """
+    """Publish a draft to a Recipe instance if owned by the caller."""
     from django.urls import reverse
 
     from recipes.models import Recipe, RecipeDraftSuggestion
@@ -506,9 +431,7 @@ def publish_from_draft(draft, user) -> dict[str, Any]:
 
 
 def _seed_recipe_image(recipe):
-    """
-    Reuse populate_images command logic to seed a recipe image without blocking publish.
-    """
+    """Seed a recipe image using the populate_images command helpers."""
     try:
         from recipes.management.commands.populate_images import (
             Command as PopulateImagesCommand,

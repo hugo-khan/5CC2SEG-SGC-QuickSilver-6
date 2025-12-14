@@ -1,23 +1,7 @@
-"""
-Configuration for AI services.
-
-API Keys Configuration:
------------------------
-You can set these keys in two ways:
-
-1. Environment variables (recommended for production):
-   Set OPENAI_API_KEY and SERPER_API_KEY in your environment or .env file
-
-2. Direct paste (for quick testing only - DO NOT COMMIT real keys):
-   Replace the placeholder strings below with your actual keys
-
-Usage:
-    from recipes.ai.config import OPENAI_API_KEY, SERPER_API_KEY
-"""
+"""Minimal configuration helpers for AI service keys."""
 
 import os
 
-# Placeholder values that indicate unconfigured keys
 _PLACEHOLDER_VALUES = {
     "OPENAI_API_KEY",
     "SERPER_API_KEY",
@@ -26,28 +10,19 @@ _PLACEHOLDER_VALUES = {
     "",
 }
 
-# =============================================================================
-# OPENAI API KEY
-# -----------------------------------------------------------------------------
-# For testing: Replace "OPENAI_API_KEY" with your actual key like "sk-..."
 OPENAI_API_KEY = os.environ.get(
-    "OPENAI_API_KEY", "OPENAI_API_KEY"  # Replace with your key
+    "OPENAI_API_KEY",
+    "OPENAI_API_KEY"
 )
 
-# =============================================================================
-# SERPER API KEY (for web search / RAG)
-# -----------------------------------------------------------------------------
-# For testing: Replace "SERPER_API_KEY" with your actual key
 SERPER_API_KEY = os.environ.get(
-    "SERPER_API_KEY", "SERPER_API_KEY"  # Replace with your key
+    "SERPER_API_KEY",
+    "SERPER_API_KEY"
 )
 
 
 def validate_keys():
-    """
-    Check if API keys are properly configured.
-    Returns a tuple of (is_valid, error_messages).
-    """
+    """Return (is_valid, errors) for the configured keys."""
     errors = []
 
     # Check if OPENAI_API_KEY is empty or still a placeholder

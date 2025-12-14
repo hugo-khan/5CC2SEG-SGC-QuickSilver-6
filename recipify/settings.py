@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 from django.contrib.messages import constants as messages
@@ -31,6 +32,9 @@ SECRET_KEY = "django-insecure-n*%ityrpt9+wxz#e%i(&7_1e=w-dv1h33&$n(mg=$0&8m0k5f-
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+# Ensure DEBUG stays True under Django test runner (tests expect it)
+if 'test' in sys.argv:
+    DEBUG = True
 
 ALLOWED_HOSTS = [
     "jansonsport.pythonanywhere.com",
@@ -56,7 +60,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     # Local apps
-    "recipes.apps.RecipesConfig",
+    'recipes',
 ]
 
 MIDDLEWARE = [
@@ -166,9 +170,9 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # Allauth settings
-LOGIN_REDIRECT_URL = "dashboard"
-ACCOUNT_LOGOUT_REDIRECT_URL = "home"
-ACCOUNT_AUTHENTICATION_METHOD = "username"
+LOGIN_REDIRECT_URL = 'dashboard'
+ACCOUNT_LOGOUT_REDIRECT_URL = 'home'
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
@@ -181,6 +185,11 @@ REDIRECT_URL_WHEN_LOGGED_IN = "dashboard"
 
 # Login URL for @login_required decorator
 LOGIN_URL = "log_in"
+
+# Fixtures (include test fixtures directory for discovery)
+FIXTURE_DIRS = [
+    BASE_DIR / 'recipes' / 'tests' / 'fixtures',
+]
 
 # Google OAuth Credentials
 # Set these via environment variables (use .env file for local development)
@@ -215,25 +224,19 @@ MESSAGE_TAGS = {
     messages.ERROR: "danger",
 }
 
-# =============================================================================
-# Cache Configuration (for AI recipe service)
-# =============================================================================
-# Using local-memory cache by default (no external service needed)
-# For production, consider database cache or memcached
+# Cache configuration for AI recipe service
 CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "recipify-cache",
-        "TIMEOUT": 86400 * 3,  # 3 days default TTL
-        "OPTIONS": {
-            "MAX_ENTRIES": 500,  # Limit memory usage
-        },
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'recipify-cache',
+        'TIMEOUT': 86400 * 3,  # 3 days
+        'OPTIONS': {
+            'MAX_ENTRIES': 500,  # Limit memory usage
+        }
     }
 }
 
-# =============================================================================
-# Logging Configuration (for AI profiling)
-# =============================================================================
+# Logging configuration for AI profiling
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

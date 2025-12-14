@@ -8,12 +8,7 @@ from recipes.image_service import ImageService
 
 
 class Recipe(models.Model):
-    """
-    Unified Recipe model that keeps all fields from both branches so that:
-    - original timing/difficulty/publishing fields continue to work
-    - newer dietary/popularity fields are also available
-    - both naming schemes (`title`/`summary` and `name`/`description`) coexist
-    """
+    """Unified recipe model keeping legacy and new fields."""
 
     DIETARY_CHOICES = [
         ("vegan", "Vegan"),
@@ -32,12 +27,12 @@ class Recipe(models.Model):
 
     # Core content (keep both naming conventions)
     title = models.CharField(max_length=200)
-    summary = models.CharField(max_length=255, blank=True)
-    ingredients = models.TextField(help_text="List ingredients separated by commas")
-    instructions = models.TextField()
+    summary = models.CharField(max_length=255, blank=True, default="")
+    ingredients = models.TextField(help_text="List ingredients separated by commas", blank=True, default="")
+    instructions = models.TextField(blank=True, default="")
 
-    name = models.CharField(max_length=255)
-    description = models.TextField()
+    name = models.CharField(max_length=255, blank=True, default="")
+    description = models.TextField(blank=True, default="")
 
     # Time & servings
     prep_time_minutes = models.PositiveIntegerField(blank=True, null=True)
@@ -60,15 +55,17 @@ class Recipe(models.Model):
     )
 
     # Newer dietary/popularity fields
-    date_posted = models.DateTimeField(auto_now_add=True)
+    # Allow fixtures or auto timestamp
+    date_posted = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     dietary_requirement = models.CharField(
         max_length=50, choices=DIETARY_CHOICES, default="none"
     )
     popularity = models.IntegerField(default=0)
 
     # Timestamps
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False, null=True, blank=True)
+    # Allow null/default for legacy fixtures; updated on save.
+    updated_at = models.DateTimeField(default=timezone.now, null=True, blank=True)
 
     # Sharing
     share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -99,18 +96,36 @@ class Recipe(models.Model):
         ordering = ["-created_at", "-date_posted"]
 
     def __str__(self) -> str:
-        """
-        Prefer the newer `name` field for consistency with the newer admin/views,
-        but fall back to `title` if needed.
-        """
+        """Prefer name over title when available."""
         return self.name or self.title
+
+    def save(self, *args, **kwargs):
+        """Compress new images, bump updated_at, and drop replaced images."""
+
+        # Capture old image before potential replacement
+        old_image = None
+        if self.pk:
+            try:
+                old_image = Recipe.objects.get(pk=self.pk).image
+            except Recipe.DoesNotExist:
+                pass
+
+        # Always bump updated_at
+        self.updated_at = timezone.now()
+
+        # Compress uploaded image before saving
+        if self.image and hasattr(self.image, "file"):
+            self.image = ImageService.compress_image(self.image)
+
+        super().save(*args, **kwargs)
+
+        # Delete the previous image file if it changed
+        if old_image and old_image != self.image:
+            old_image.delete(save=False)
 
     @property
     def total_time_minutes(self) -> int:
-        """
-        Total time in minutes, preferring the unified `cooking_time` field
-        if it is set, otherwise falling back to prep + cook time.
-        """
+        """Return total time preferring cooking_time else prep + cook."""
         if self.cooking_time:
             return self.cooking_time
 
@@ -120,42 +135,14 @@ class Recipe(models.Model):
 
     @property
     def created_by(self):
-        """
-        Backwards-compatible alias for code that expects `created_by`.
-        """
+        """Backwards-compatible alias for code expecting created_by."""
         return self.author
 
     def get_share_url(self, request):
-        """
-        Generate a shareable URL for this recipe.
-        """
+        """Generate a shareable URL for this recipe."""
         from django.urls import reverse
 
         return request.build_absolute_uri(
             reverse("recipe_share", kwargs={"share_token": self.share_token})
         )
 
-    def save(self, *args, **kwargs):
-        """
-        - Compress new uploaded images
-        - Delete old image if replaced or cleared
-        """
-
-        # Get old image (if this is an update)
-        old_image = None
-        if self.pk:
-            try:
-                old_image = Recipe.objects.get(pk=self.pk).image
-            except Recipe.DoesNotExist:
-                pass
-
-        # If a new image was uploaded, compress it
-        if self.image and hasattr(self.image, "file"):
-            self.image = ImageService.compress_image(self.image)
-
-        super().save(*args, **kwargs)
-
-        # --- DELETE OLD IMAGE ---
-        # If there WAS an old image but it is DIFFERENT now → delete it
-        if old_image and old_image != self.image:
-            old_image.delete(save=False)
