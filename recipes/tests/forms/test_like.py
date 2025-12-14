@@ -1,7 +1,8 @@
 import pytest
 from django.urls import reverse
-from recipes.models.user import User
+
 from recipes.models.recipe import Recipe
+from recipes.models.user import User
 
 
 @pytest.mark.django_db
@@ -9,13 +10,10 @@ class TestToggleLikeView:
 
     def setup_method(self):
         self.user = User.objects.create_user(
-            username="@testuser",
-            email="test@example.com",
-            password="password123"
+            username="@testuser", email="test@example.com", password="password123"
         )
         self.recipe = Recipe.objects.create(
-            title="Test Recipe",
-            description="A simple test recipe."
+            title="Test Recipe", description="A simple test recipe."
         )
 
     def test_user_can_like_recipe(self, client):
@@ -26,7 +24,7 @@ class TestToggleLikeView:
         response = client.post(url)
 
         # Assertions
-        assert response.status_code == 302   # should redirect back
+        assert response.status_code == 302  # should redirect back
         assert self.user in self.recipe.likes.all()
 
     def test_user_can_unlike_recipe(self, client):
@@ -47,7 +45,6 @@ class TestToggleLikeView:
 
         response = client.post(url)
 
-
         assert response.status_code in (302, 301)
         assert self.recipe.likes.count() == 0
 
@@ -59,6 +56,5 @@ class TestToggleLikeView:
         # Like twice check
         client.post(url)
         client.post(url)
-
 
         assert self.recipe.likes.count() == 0

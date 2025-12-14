@@ -10,8 +10,7 @@ class Migration(migrations.Migration):
     """
 
     dependencies = [
-        ('recipes', '0004_merge_0003_follow_0003_savedrecipe'),
+        ("recipes", "0004_merge_0003_follow_0003_savedrecipe"),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -6,7 +6,7 @@ Usage:
 
     with profile_stage("serper_search"):
         # ... code to profile
-    
+
     summary = get_profile_summary()
 
 Enhanced Profiling:
@@ -18,12 +18,12 @@ Enhanced Profiling:
     - Detailed breakdown for debugging
 """
 
-import time
 import logging
+import time
 from contextlib import contextmanager
-from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 from threading import local
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -34,16 +34,18 @@ _profile_data = local()
 @dataclass
 class ProfileEntry:
     """Single profiling entry."""
+
     name: str
     start_time: float
     end_time: float = 0.0
     duration_ms: float = 0.0
     metadata: Dict = field(default_factory=dict)
-    
 
-@dataclass  
+
+@dataclass
 class ProfileCounters:
     """Counters for tracking key operations."""
+
     llm_calls: int = 0
     serper_calls: int = 0
     cache_hits: int = 0
@@ -53,14 +55,14 @@ class ProfileCounters:
 
 def _get_profile_list() -> List[ProfileEntry]:
     """Get or create the profile list for this thread."""
-    if not hasattr(_profile_data, 'entries'):
+    if not hasattr(_profile_data, "entries"):
         _profile_data.entries = []
     return _profile_data.entries
 
 
 def _get_counters() -> ProfileCounters:
     """Get or create the counters for this thread."""
-    if not hasattr(_profile_data, 'counters'):
+    if not hasattr(_profile_data, "counters"):
         _profile_data.counters = ProfileCounters()
     return _profile_data.counters
 
@@ -69,7 +71,7 @@ def clear_profile() -> None:
     """Clear all profiling data for this thread."""
     _profile_data.entries = []
     _profile_data.counters = ProfileCounters()
-    if hasattr(_profile_data, 'wall_start'):
+    if hasattr(_profile_data, "wall_start"):
         del _profile_data.wall_start
 
 
@@ -80,7 +82,7 @@ def start_wall_clock() -> None:
 
 def get_wall_clock_ms() -> float:
     """Get elapsed wall clock time in milliseconds."""
-    if not hasattr(_profile_data, 'wall_start'):
+    if not hasattr(_profile_data, "wall_start"):
         return 0.0
     return (time.perf_counter() - _profile_data.wall_start) * 1000
 
@@ -96,33 +98,31 @@ def increment_counter(name: str, amount: int = 1) -> None:
 def profile_stage(name: str, metadata: Optional[Dict] = None):
     """
     Context manager to profile a code section.
-    
+
     Args:
         name: Human-readable name for this stage
         metadata: Optional dict of additional info to log
-    
+
     Example:
         with profile_stage("llm_call", {"model": "gpt-4o-mini"}):
             result = call_llm(prompt)
     """
     from django.conf import settings
-    
+
     entry = ProfileEntry(
-        name=name,
-        start_time=time.perf_counter(),
-        metadata=metadata or {}
+        name=name, start_time=time.perf_counter(), metadata=metadata or {}
     )
-    
+
     try:
         yield entry
     finally:
         entry.end_time = time.perf_counter()
         entry.duration_ms = (entry.end_time - entry.start_time) * 1000
-        
+
         _get_profile_list().append(entry)
-        
+
         # Log if DEBUG mode
-        if getattr(settings, 'DEBUG', False):
+        if getattr(settings, "DEBUG", False):
             meta_str = f" [{entry.metadata}]" if entry.metadata else ""
             logger.info(f"[PROFILE] {name}: {entry.duration_ms:.1f}ms{meta_str}")
 
@@ -130,7 +130,7 @@ def profile_stage(name: str, metadata: Optional[Dict] = None):
 def get_profile_summary() -> Dict[str, Any]:
     """
     Get a summary of all profiled stages.
-    
+
     Returns:
         Dict with:
             - stages: list of {name, duration_ms, metadata}
@@ -141,7 +141,7 @@ def get_profile_summary() -> Dict[str, Any]:
     """
     entries = _get_profile_list()
     counters = _get_counters()
-    
+
     if not entries:
         return {
             "stages": [],
@@ -154,21 +154,17 @@ def get_profile_summary() -> Dict[str, Any]:
                 "cache_hits": counters.cache_hits,
                 "cache_misses": counters.cache_misses,
                 "errors": counters.errors,
-            }
+            },
         }
-    
+
     stages = [
-        {
-            "name": e.name,
-            "duration_ms": round(e.duration_ms, 1),
-            "metadata": e.metadata
-        }
+        {"name": e.name, "duration_ms": round(e.duration_ms, 1), "metadata": e.metadata}
         for e in entries
     ]
-    
+
     total_ms = sum(e.duration_ms for e in entries)
     slowest = max(entries, key=lambda e: e.duration_ms).name if entries else None
-    
+
     return {
         "stages": stages,
         "total_ms": round(total_ms, 1),
@@ -180,22 +176,22 @@ def get_profile_summary() -> Dict[str, Any]:
             "cache_hits": counters.cache_hits,
             "cache_misses": counters.cache_misses,
             "errors": counters.errors,
-        }
+        },
     }
 
 
 def log_profile_table() -> str:
     """
     Generate a formatted table of profiling data.
-    
+
     Returns:
         Formatted string table suitable for logging.
     """
     summary = get_profile_summary()
-    
+
     if not summary["stages"]:
         return "No profiling data collected."
-    
+
     lines = [
         "",
         "=" * 70,
@@ -204,7 +200,7 @@ def log_profile_table() -> str:
         f"{'Stage':<35} {'Duration (ms)':>15} {'%':>8}",
         "-" * 70,
     ]
-    
+
     total = summary["total_ms"]
     for stage in summary["stages"]:
         pct = (stage["duration_ms"] / total * 100) if total > 0 else 0
@@ -212,28 +208,31 @@ def log_profile_table() -> str:
         lines.append(
             f"{stage['name']:<35} {stage['duration_ms']:>15.1f} {pct:>7.1f}%{marker}"
         )
-    
-    lines.extend([
-        "-" * 70,
-        f"{'TOTAL (stages)':<35} {total:>15.1f}",
-        f"{'WALL CLOCK':<35} {summary['wall_ms']:>15.1f}",
-        "=" * 70,
-    ])
-    
+
+    lines.extend(
+        [
+            "-" * 70,
+            f"{'TOTAL (stages)':<35} {total:>15.1f}",
+            f"{'WALL CLOCK':<35} {summary['wall_ms']:>15.1f}",
+            "=" * 70,
+        ]
+    )
+
     # Add counters section
     counters = summary.get("counters", {})
-    lines.extend([
-        "",
-        "COUNTERS:",
-        f"  LLM calls:      {counters.get('llm_calls', 0)}",
-        f"  Serper calls:   {counters.get('serper_calls', 0)}",
-        f"  Cache hits:     {counters.get('cache_hits', 0)}",
-        f"  Cache misses:   {counters.get('cache_misses', 0)}",
-        f"  Errors:         {counters.get('errors', 0)}",
-        "",
-        f"Slowest stage: {summary['slowest']}",
-        "",
-    ])
-    
-    return "\n".join(lines)
+    lines.extend(
+        [
+            "",
+            "COUNTERS:",
+            f"  LLM calls:      {counters.get('llm_calls', 0)}",
+            f"  Serper calls:   {counters.get('serper_calls', 0)}",
+            f"  Cache hits:     {counters.get('cache_hits', 0)}",
+            f"  Cache misses:   {counters.get('cache_misses', 0)}",
+            f"  Errors:         {counters.get('errors', 0)}",
+            "",
+            f"Slowest stage: {summary['slowest']}",
+            "",
+        ]
+    )
 
+    return "\n".join(lines)

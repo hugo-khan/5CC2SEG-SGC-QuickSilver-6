@@ -5,21 +5,21 @@ from recipes.views import (
     RecipeCreateView,
     RecipeDeleteView,
     RecipeDetailView,
-    RecipeUpdateView,
     RecipeShareView,
+    RecipeUpdateView,
     follow_user,
     unfollow_user,
+)
+from recipes.views.ai_chatbot_view import (
+    ai_chatbot,
+    ai_chatbot_clear,
+    ai_chatbot_message,
+    ai_chatbot_publish,
+    ai_diagnostic,
 )
 from recipes.views.comment_report_view import report_comment
 from recipes.views.dashboard_view import browse_recipes
 from recipes.views.recipe_views import toggle_save_recipe
-from recipes.views.ai_chatbot_view import (
-    ai_chatbot,
-    ai_chatbot_message,
-    ai_chatbot_publish,
-    ai_chatbot_clear,
-    ai_diagnostic,
-)
 from recipes.views.reported_comments_view import reported_comments_view
 
 urlpatterns = [
@@ -36,12 +36,12 @@ urlpatterns = [
     # AI Chef chatbot
     path("ai/chef/", ai_chatbot, name="ai_chatbot"),
     path("ai/chef/message/", ai_chatbot_message, name="ai_chatbot_message"),
-    path("ai/chef/publish/<int:draft_id>/", ai_chatbot_publish, name="ai_chatbot_publish"),
+    path(
+        "ai/chef/publish/<int:draft_id>/", ai_chatbot_publish, name="ai_chatbot_publish"
+    ),
     path("ai/chef/clear/", ai_chatbot_clear, name="ai_chatbot_clear"),
     path("ai/chef/diagnostic/", ai_diagnostic, name="ai_diagnostic"),
     # Comment reporting
     path("comments/report/", report_comment, name="report_comments"),
     path("admin/reported-comments/", reported_comments_view, name="reported_comments"),
 ]
-
-

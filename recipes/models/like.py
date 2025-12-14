@@ -1,7 +1,7 @@
 from django.db import models
 
-from .user import User
 from .recipe import Recipe
+from .user import User
 
 
 class Like(models.Model):

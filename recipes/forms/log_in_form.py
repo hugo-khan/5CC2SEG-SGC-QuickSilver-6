@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import authenticate
 
+
 class LogInForm(forms.Form):
     """
     Form enabling registered users to log in.
@@ -19,9 +20,9 @@ class LogInForm(forms.Form):
         label="Username",
         widget=forms.TextInput(
             attrs={
-                'placeholder': '@username',
-                'autocomplete': 'username',
-                'autocapitalize': 'none',
+                "placeholder": "@username",
+                "autocomplete": "username",
+                "autocapitalize": "none",
             }
         ),
     )
@@ -29,8 +30,8 @@ class LogInForm(forms.Form):
         label="Password",
         widget=forms.PasswordInput(
             attrs={
-                'placeholder': '••••••••',
-                'autocomplete': 'current-password',
+                "placeholder": "••••••••",
+                "autocomplete": "current-password",
             }
         ),
     )
@@ -46,7 +47,7 @@ class LogInForm(forms.Form):
 
         user = None
         if self.is_valid():
-            username = self.cleaned_data.get('username')
-            password = self.cleaned_data.get('password')
+            username = self.cleaned_data.get("username")
+            password = self.cleaned_data.get("password")
             user = authenticate(username=username, password=password)
         return user

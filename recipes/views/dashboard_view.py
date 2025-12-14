@@ -37,18 +37,18 @@ def browse_recipes(request):
 
     # Normal GET request: show all recipes with saved-state information
     recipes = Recipe.objects.all().select_related("author")
-    
+
     # Set up filter form with ingredient choices
     form = RecipeFilterForm(request.GET or None)
     all_ingredients = collect_all_ingredients()
-    form.fields['ingredients'].choices = [(i, i.title()) for i in all_ingredients]
-    
+    form.fields["ingredients"].choices = [(i, i.title()) for i in all_ingredients]
+
     # Filter by selected ingredients
-    selected_ingredients = request.GET.getlist('ingredients')
+    selected_ingredients = request.GET.getlist("ingredients")
     if selected_ingredients:
         for ingredient in selected_ingredients:
             recipes = recipes.filter(ingredients__icontains=ingredient)
-    
+
     my_recipes = (
         Recipe.objects.filter(author=current_user)
         .select_related("author")

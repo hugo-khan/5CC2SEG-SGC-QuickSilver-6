@@ -28,4 +28,3 @@ class RecipeShareView(DetailView):
         context["share_url"] = recipe.get_share_url(self.request)
         context["is_shared_view"] = True
         return context
-

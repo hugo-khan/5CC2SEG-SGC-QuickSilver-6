@@ -1,4 +1,5 @@
 """Tests for AdminLoginView."""
+
 from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
@@ -71,7 +72,9 @@ class AdminLoginViewTests(TestCase):
 
     def test_invalid_credentials_show_error(self):
         response = self.client.post(
-            self.url, {"username": "doesnotexist", "password": "WrongPassword"}, follow=True
+            self.url,
+            {"username": "doesnotexist", "password": "WrongPassword"},
+            follow=True,
         )
 
         self.assertEqual(response.status_code, 200)

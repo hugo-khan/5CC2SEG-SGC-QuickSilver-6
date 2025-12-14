@@ -17,21 +17,24 @@ import logging
 from typing import Any
 
 from django.utils.text import slugify
-from recipes.ai.profiling import profile_stage, clear_profile, log_profile_table
+
+from recipes.ai.profiling import clear_profile, log_profile_table, profile_stage
 
 logger = logging.getLogger(__name__)
 
 # Lazy imports for crewai to allow migrations without the package installed
 _crewai_available = None
 
+
 def _check_crewai():
     """Check if crewai is available and import it lazily."""
     global _crewai_available
     if _crewai_available is None:
         try:
-            from crewai import Agent, Task, Crew, Process
+            from crewai import Agent, Crew, Process, Task
             from crewai.tools import tool
             from crewai_tools import SerperDevTool
+
             _crewai_available = True
         except ImportError:
             _crewai_available = False
@@ -44,9 +47,10 @@ def _get_crewai_components():
         raise ImportError(
             "crewai is not installed. Please install it with: pip install crewai crewai-tools"
         )
-    from crewai import Agent, Task, Crew, Process
+    from crewai import Agent, Crew, Process, Task
     from crewai.tools import tool
     from crewai_tools import SerperDevTool
+
     return Agent, Task, Crew, Process, tool, SerperDevTool
 
 
@@ -54,11 +58,13 @@ def _get_crewai_components():
 # Custom Tools
 # =============================================================================
 
+
 def _create_recipe_web_search_tool():
     """Create the recipe web search tool using crewai decorators."""
     from recipes.ai.config import SERPER_API_KEY
+
     _, _, _, _, tool, SerperDevTool = _get_crewai_components()
-    
+
     @tool("recipe_web_search")
     def recipe_web_search(query: str) -> str:
         """
@@ -73,7 +79,7 @@ def _create_recipe_web_search_tool():
             except Exception as e:
                 logger.error(f"Serper search failed: {e}")
                 return f"Search failed: {str(e)}"
-    
+
     return recipe_web_search
 
 
@@ -81,16 +87,17 @@ def _create_recipe_web_search_tool():
 # Agent Definitions
 # =============================================================================
 
+
 def create_recipe_researcher():
     """
     Agent 1: Recipe Research & Culinary Planner
-    
+
     Responsible for retrieving relevant recipe sources using web search
     and synthesizing a coherent recipe that meets dietary constraints.
     """
     Agent, _, _, _, _, _ = _get_crewai_components()
     recipe_web_search = _create_recipe_web_search_tool()
-    
+
     return Agent(
         role="Recipe Research & Culinary Planner",
         goal=(
@@ -115,13 +122,13 @@ def create_recipe_researcher():
 def create_formatter_agent():
     """
     Agent 2: Cookbook Editor & UX Writer
-    
+
     Responsible for converting structured recipe data into:
     1. A polished chat response for display
     2. Django-form-ready field mapping
     """
     Agent, _, _, _, _, _ = _get_crewai_components()
-    
+
     return Agent(
         role="Cookbook Editor & UX Writer",
         goal=(
@@ -145,12 +152,12 @@ def create_formatter_agent():
 def create_publisher_agent():
     """
     Agent 3: Publishing Assistant
-    
+
     Responsible for validating and publishing recipes to the database.
     Only publishes when explicitly requested by the user.
     """
     Agent, _, _, _, _, _ = _get_crewai_components()
-    
+
     return Agent(
         role="Publishing Assistant",
         goal=(
@@ -174,12 +181,17 @@ def create_publisher_agent():
 # Task Definitions
 # =============================================================================
 
+
 def create_research_task(prompt: str, dietary_requirements: str, researcher):
     """Create the recipe research task."""
     _, Task, _, _, _, _ = _get_crewai_components()
-    
-    dietary_note = f"Dietary requirements: {dietary_requirements}" if dietary_requirements else "No specific dietary requirements."
-    
+
+    dietary_note = (
+        f"Dietary requirements: {dietary_requirements}"
+        if dietary_requirements
+        else "No specific dietary requirements."
+    )
+
     return Task(
         description=f"""
 Research and create a complete recipe based on the user's request.
@@ -223,7 +235,7 @@ Output MUST be valid JSON with this exact structure:
 def create_format_task(formatter):
     """Create the formatting task."""
     _, Task, _, _, _, _ = _get_crewai_components()
-    
+
     return Task(
         description="""
 Take the structured recipe JSON from the previous task and create two outputs:
@@ -274,60 +286,66 @@ Output MUST be valid JSON with this structure:
 # Main Service Functions
 # =============================================================================
 
+
 class CrewServiceError(Exception):
     """Custom exception for crew service errors."""
+
     pass
 
 
 def run_suggestion(prompt: str, dietary_requirements: str = "") -> dict[str, Any]:
     """
     Run the recipe suggestion crew workflow.
-    
+
     Args:
         prompt: User's recipe request
         dietary_requirements: Optional dietary restrictions
-    
+
     Returns:
         dict with keys:
             - assistant_display: Formatted response for chat
             - form_fields: Dict matching Recipe form fields
             - raw: Raw output from the crew
             - _profile: Profiling data (if DEBUG)
-    
+
     Raises:
         CrewServiceError: If the workflow fails or keys are not configured
     """
     import os
+
     from django.conf import settings
-    from recipes.ai.config import keys_configured, OPENAI_API_KEY, SERPER_API_KEY
-    
+
+    from recipes.ai.config import OPENAI_API_KEY, SERPER_API_KEY, keys_configured
+
     # Clear any previous profiling data
     clear_profile()
-    
+
     if not keys_configured():
         raise CrewServiceError(
             "API keys are not configured. Please set OPENAI_API_KEY and SERPER_API_KEY "
             "in your environment or in recipes/ai/config.py"
         )
-    
+
     # Set environment variables for CrewAI/litellm to pick up
     # This is necessary because litellm reads directly from os.environ
     os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
     os.environ["SERPER_API_KEY"] = SERPER_API_KEY
-    
+
     try:
         with profile_stage("crew_setup"):
             # Get crewai components
             _, _, Crew, Process, _, _ = _get_crewai_components()
-            
+
             # Create agents
             researcher = create_recipe_researcher()
             formatter = create_formatter_agent()
-            
+
             # Create tasks
-            research_task = create_research_task(prompt, dietary_requirements, researcher)
+            research_task = create_research_task(
+                prompt, dietary_requirements, researcher
+            )
             format_task = create_format_task(formatter)
-            
+
             # Create crew
             crew = Crew(
                 agents=[researcher, formatter],
@@ -335,27 +353,27 @@ def run_suggestion(prompt: str, dietary_requirements: str = "") -> dict[str, Any
                 process=Process.sequential,
                 verbose=True,
             )
-        
+
         with profile_stage("crew_kickoff_total"):
             result = crew.kickoff()
-        
+
         with profile_stage("parse_output"):
             # Parse the result
             raw_output = str(result)
-            
+
             # Try to extract JSON from the output
             parsed = _parse_crew_output(raw_output)
-        
+
         # Log profiling summary
-        if getattr(settings, 'DEBUG', False):
+        if getattr(settings, "DEBUG", False):
             logger.info(log_profile_table())
-        
+
         return {
             "assistant_display": parsed.get("assistant_display", raw_output),
             "form_fields": parsed.get("form_fields", {}),
             "raw": raw_output,
         }
-        
+
     except ImportError as e:
         logger.error(f"CrewAI not available: {e}")
         raise CrewServiceError(
@@ -374,23 +392,23 @@ def _parse_crew_output(output: str) -> dict:
     """
     # Try to find JSON in the output
     import re
-    
+
     # Look for JSON block (possibly wrapped in markdown code blocks)
     json_patterns = [
-        r'```json\s*(.*?)\s*```',
-        r'```\s*(.*?)\s*```',
+        r"```json\s*(.*?)\s*```",
+        r"```\s*(.*?)\s*```",
         r'\{[\s\S]*"assistant_display"[\s\S]*\}',
     ]
-    
+
     for pattern in json_patterns:
         match = re.search(pattern, output, re.DOTALL)
         if match:
             try:
-                json_str = match.group(1) if '```' in pattern else match.group(0)
+                json_str = match.group(1) if "```" in pattern else match.group(0)
                 return json.loads(json_str)
             except json.JSONDecodeError:
                 continue
-    
+
     # If no valid JSON found, try to parse the entire output
     try:
         return json.loads(output)
@@ -405,52 +423,55 @@ def _parse_crew_output(output: str) -> dict:
 def publish_from_draft(draft, user) -> dict[str, Any]:
     """
     Publish a recipe from a stored draft.
-    
+
     Args:
         draft: RecipeDraftSuggestion instance
         user: User instance (must match draft.user)
-    
+
     Returns:
         dict with keys:
             - recipe: The created Recipe instance
             - recipe_url: URL to the recipe detail page
-    
+
     Raises:
         CrewServiceError: If publishing fails or user doesn't own draft
     """
     from django.urls import reverse
+
     from recipes.models import Recipe, RecipeDraftSuggestion
-    
+
     # Validate ownership
     if draft.user != user:
         raise CrewServiceError("You can only publish your own drafts.")
-    
+
     # Check draft status
     if draft.status == RecipeDraftSuggestion.Status.PUBLISHED:
         raise CrewServiceError("This recipe has already been published.")
-    
+
     # Get form fields from draft
     form_fields = draft.draft_payload
-    
+
     if not form_fields:
         raise CrewServiceError("Draft has no recipe data to publish.")
-    
+
     # Validate required fields
     required_fields = ["title", "ingredients", "instructions"]
     missing = [f for f in required_fields if not form_fields.get(f)]
     if missing:
         raise CrewServiceError(f"Missing required fields: {', '.join(missing)}")
-    
+
     dietary_requirement = form_fields.get("dietary_requirement") or "none"
     difficulty = form_fields.get("difficulty") or "easy"
-    
+
     try:
         # Create the recipe
         recipe = Recipe.objects.create(
             author=user,
             title=form_fields.get("title", "Untitled Recipe"),
             summary=form_fields.get("summary", ""),
-            name=form_fields.get("title", "Untitled Recipe"),  # Populate both naming conventions
+            name=form_fields.get(
+                "title", "Untitled Recipe"
+            ),  # Populate both naming conventions
             description=form_fields.get("summary", ""),
             ingredients=form_fields.get("ingredients", ""),
             instructions=form_fields.get("instructions", ""),
@@ -464,19 +485,19 @@ def publish_from_draft(draft, user) -> dict[str, Any]:
 
         # Seed image (non-blocking)
         _seed_recipe_image(recipe)
-        
+
         # Update draft status
         draft.status = RecipeDraftSuggestion.Status.PUBLISHED
         draft.published_recipe = recipe
         draft.save()
-        
+
         recipe_url = reverse("recipe_detail", kwargs={"pk": recipe.pk})
-        
+
         return {
             "recipe": recipe,
             "recipe_url": recipe_url,
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to publish recipe: {e}")
         draft.status = RecipeDraftSuggestion.Status.FAILED
@@ -489,7 +510,9 @@ def _seed_recipe_image(recipe):
     Reuse populate_images command logic to seed a recipe image without blocking publish.
     """
     try:
-        from recipes.management.commands.populate_images import Command as PopulateImagesCommand
+        from recipes.management.commands.populate_images import (
+            Command as PopulateImagesCommand,
+        )
 
         cmd = PopulateImagesCommand()
         image_url = cmd.get_pexels_image(recipe)
@@ -506,4 +529,6 @@ def _seed_recipe_image(recipe):
             recipe.image_url = image_url
             recipe.save(update_fields=["image", "image_url"])
     except Exception as exc:
-        logger.exception(f"Image seeding failed for recipe {getattr(recipe, 'id', '?')}: {exc}")
+        logger.exception(
+            f"Image seeding failed for recipe {getattr(recipe, 'id', '?')}: {exc}"
+        )

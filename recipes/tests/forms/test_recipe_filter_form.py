@@ -1,4 +1,5 @@
 """Tests for RecipeFilterForm."""
+
 from django.test import TestCase
 
 from recipes.forms.recipe_filter_form import RecipeFilterForm
@@ -52,11 +53,15 @@ class RecipeFilterFormTests(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_form_is_valid_with_full_data(self):
-        form = RecipeFilterForm(data={
-            "search": "chocolate",
-            "dietary_requirement": [choice[0] for choice in Recipe.DIETARY_CHOICES[:2]],
-            "sort_by": "name",
-        })
+        form = RecipeFilterForm(
+            data={
+                "search": "chocolate",
+                "dietary_requirement": [
+                    choice[0] for choice in Recipe.DIETARY_CHOICES[:2]
+                ],
+                "sort_by": "name",
+            }
+        )
 
         self.assertTrue(form.is_valid())
         cleaned = form.cleaned_data
@@ -77,4 +82,3 @@ class RecipeFilterFormTests(TestCase):
     def test_form_accepts_dietary_requirements(self):
         form = RecipeFilterForm(data={"dietary_requirement": ["vegan", "vegetarian"]})
         self.assertTrue(form.is_valid())
-

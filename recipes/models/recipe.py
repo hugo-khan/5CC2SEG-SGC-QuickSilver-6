@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from recipes.image_service import ImageService  
+from recipes.image_service import ImageService
 
 
 class Recipe(models.Model):
@@ -76,7 +76,6 @@ class Recipe(models.Model):
     # Seeded image
     image_url = models.URLField(blank=True, null=True, help_text="External image URL")
 
-
     # Main recipe image (uploaded file, compressed on save)
     image = models.ImageField(
         upload_to="recipes/",
@@ -131,8 +130,9 @@ class Recipe(models.Model):
         Generate a shareable URL for this recipe.
         """
         from django.urls import reverse
+
         return request.build_absolute_uri(
-            reverse('recipe_share', kwargs={'share_token': self.share_token})
+            reverse("recipe_share", kwargs={"share_token": self.share_token})
         )
 
     def save(self, *args, **kwargs):
@@ -159,4 +159,3 @@ class Recipe(models.Model):
         # If there WAS an old image but it is DIFFERENT now → delete it
         if old_image and old_image != self.image:
             old_image.delete(save=False)
-

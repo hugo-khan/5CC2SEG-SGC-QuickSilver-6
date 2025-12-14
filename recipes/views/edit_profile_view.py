@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.edit import UpdateView
 from django.urls import reverse
+from django.views.generic.edit import UpdateView
+
 from recipes.forms import UserForm
 from recipes.models.user import User  # Add this import
 

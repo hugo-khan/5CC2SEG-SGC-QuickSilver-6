@@ -2,41 +2,42 @@
 
 import os
 from io import BytesIO
+
 import requests
-from PIL import Image, ImageDraw
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
 from django.db import models
 from django.utils.text import slugify
+from PIL import Image, ImageDraw
 
 from recipes.models import Recipe
 
 
 class Command(BaseCommand):
-    help = 'Populate recipe images using Pexels (food search) with fallback to local placeholder'
+    help = "Populate recipe images using Pexels (food search) with fallback to local placeholder"
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--overwrite',
-            action='store_true',
-            help='Overwrite existing images',
+            "--overwrite",
+            action="store_true",
+            help="Overwrite existing images",
         )
         parser.add_argument(
-            '--recipe-id',
+            "--recipe-id",
             type=int,
-            help='Only populate image for a specific recipe ID',
+            help="Only populate image for a specific recipe ID",
         )
 
     def handle(self, *args, **options):
-        overwrite = options['overwrite']
-        recipe_id = options.get('recipe_id')
+        overwrite = options["overwrite"]
+        recipe_id = options.get("recipe_id")
 
         # Get recipes to process
         if recipe_id:
             recipes = Recipe.objects.filter(pk=recipe_id)
             if not recipes.exists():
                 self.stdout.write(
-                    self.style.ERROR(f'Recipe with ID {recipe_id} not found')
+                    self.style.ERROR(f"Recipe with ID {recipe_id} not found")
                 )
                 return
         else:
@@ -49,10 +50,10 @@ class Command(BaseCommand):
 
         total = recipes.count()
         if total == 0:
-            self.stdout.write(self.style.WARNING('No recipes to process'))
+            self.stdout.write(self.style.WARNING("No recipes to process"))
             return
 
-        self.stdout.write(f'Processing {total} recipe(s) using Pexels...')
+        self.stdout.write(f"Processing {total} recipe(s) using Pexels...")
 
         success_count = 0
         error_count = 0
@@ -95,10 +96,10 @@ class Command(BaseCommand):
                 )
                 error_count += 1
 
-        self.stdout.write('')
+        self.stdout.write("")
         self.stdout.write(
             self.style.SUCCESS(
-                f'Completed: {success_count} successful, {error_count} errors'
+                f"Completed: {success_count} successful, {error_count} errors"
             )
         )
 
@@ -106,7 +107,9 @@ class Command(BaseCommand):
         """Fetch a food image URL from Pexels or return None."""
         api_key = os.environ.get("PEXELS_API_KEY")
         if not api_key:
-            self.stdout.write(self.style.WARNING("PEXELS_API_KEY not set; using placeholders."))
+            self.stdout.write(
+                self.style.WARNING("PEXELS_API_KEY not set; using placeholders.")
+            )
             return None
 
         if not self._looks_like_food(recipe):
@@ -125,7 +128,11 @@ class Command(BaseCommand):
                 timeout=10,
             )
             if resp.status_code != 200:
-                self.stdout.write(self.style.WARNING(f"Pexels API returned {resp.status_code} for '{query}'"))
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"Pexels API returned {resp.status_code} for '{query}'"
+                    )
+                )
                 return None
             data = resp.json()
             photos = data.get("photos") or []
@@ -135,7 +142,9 @@ class Command(BaseCommand):
             # Prefer large landscape variants; fallback to original
             return src.get("large2x") or src.get("large") or src.get("original")
         except Exception as exc:
-            self.stdout.write(self.style.WARNING(f"Pexels fetch failed for '{query}': {exc}"))
+            self.stdout.write(
+                self.style.WARNING(f"Pexels fetch failed for '{query}': {exc}")
+            )
             return None
 
     def download_image_to_file(self, url, basename):
@@ -186,7 +195,25 @@ class Command(BaseCommand):
             if "," in recipe.ingredients or len(recipe.ingredients.split()) > 3:
                 return True
 
-        food_words = ["chicken", "beef", "pasta", "salad", "soup", "curry", "cookie", "cake", "taco", "noodle", "pizza", "burger", "fish", "vegetable", "veggie", "rice", "stir", "fry"]
+        food_words = [
+            "chicken",
+            "beef",
+            "pasta",
+            "salad",
+            "soup",
+            "curry",
+            "cookie",
+            "cake",
+            "taco",
+            "noodle",
+            "pizza",
+            "burger",
+            "fish",
+            "vegetable",
+            "veggie",
+            "rice",
+            "stir",
+            "fry",
+        ]
         title_lower = (recipe.title or "").lower()
         return any(word in title_lower for word in food_words)
-

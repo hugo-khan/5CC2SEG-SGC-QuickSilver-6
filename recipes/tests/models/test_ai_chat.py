@@ -1,14 +1,17 @@
+from ai_chat.models import ChatMessage, RecipeDraftSuggestion
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
+
 from recipes.models import Recipe
-from ai_chat.models import RecipeDraftSuggestion, ChatMessage
 
 
 class RecipeDraftSuggestionTests(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="password123")
+        self.user = User.objects.create_user(
+            username="testuser", password="password123"
+        )
         self.recipe = Recipe.objects.create(
             title="Test Recipe",
             description="Test description",
@@ -26,7 +29,10 @@ class RecipeDraftSuggestionTests(TestCase):
             user=self.user,
             prompt="Create a recipe for a vegetarian dish",
             dietary_requirements="Vegetarian",
-            draft_payload={"title": "Vegetarian Salad", "ingredients": "Lettuce, Tomato, Cucumber"},
+            draft_payload={
+                "title": "Vegetarian Salad",
+                "ingredients": "Lettuce, Tomato, Cucumber",
+            },
             assistant_display="A healthy vegetarian dish.",
             status=RecipeDraftSuggestion.Status.DRAFT,
         )
@@ -88,12 +94,17 @@ class RecipeDraftSuggestionTests(TestCase):
 class ChatMessageTests(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="password123")
+        self.user = User.objects.create_user(
+            username="testuser", password="password123"
+        )
 
         self.draft = RecipeDraftSuggestion.objects.create(
             user=self.user,
             prompt="Create a recipe for a vegetarian dish",
-            draft_payload={"title": "Vegetarian Salad", "ingredients": "Lettuce, Tomato, Cucumber"},
+            draft_payload={
+                "title": "Vegetarian Salad",
+                "ingredients": "Lettuce, Tomato, Cucumber",
+            },
             assistant_display="A healthy vegetarian dish.",
             status=RecipeDraftSuggestion.Status.DRAFT,
         )

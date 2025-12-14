@@ -6,13 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0007_recipe_share_token'),
+        ("recipes", "0007_recipe_share_token"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='recipe',
-            name='image_url',
-            field=models.URLField(blank=True, help_text='External image URL (e.g., from AI generation or Unsplash)', null=True),
+            model_name="recipe",
+            name="image_url",
+            field=models.URLField(
+                blank=True,
+                help_text="External image URL (e.g., from AI generation or Unsplash)",
+                null=True,
+            ),
         ),
     ]

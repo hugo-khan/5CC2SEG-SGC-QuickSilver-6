@@ -1,17 +1,18 @@
+# Import the script as a module
+import importlib
 import io
 import sys
 from unittest.mock import patch
-from django.test import TestCase
-from django.core.management import call_command
 
-# Import the script as a module
-import importlib
+from django.core.management import call_command
+from django.test import TestCase
 
 
 class TestMakeAdminScript(TestCase):
 
     def setUp(self):
         from recipes.models import User
+
         self.User = User
 
     def run_script(self, argv):
@@ -20,16 +21,14 @@ class TestMakeAdminScript(TestCase):
             output = io.StringIO()
             with patch("sys.stdout", output):
                 importlib.invalidate_caches()
-                import make_admin   # runs on import
+                import make_admin  # runs on import
         return output.getvalue()
 
     def test_make_user_admin(self):
         """Script should elevate an existing user to admin."""
 
         user = self.User.objects.create_user(
-            username="@john",
-            email="john@example.com",
-            password="pass123"
+            username="@john", email="john@example.com", password="pass123"
         )
 
         output = self.run_script(["make_admin.py", "@john"])
@@ -47,9 +46,7 @@ class TestMakeAdminScript(TestCase):
 
         # Create user to match similar search
         similar = self.User.objects.create_user(
-            username="@johndoe123",
-            email="a@a.com",
-            password="pass"
+            username="@johndoe123", email="a@a.com", password="pass"
         )
 
         output = self.run_script(["make_admin.py", "@unknown"])

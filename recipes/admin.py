@@ -1,8 +1,8 @@
-from django.contrib import admin
-from django.contrib import messages
-from django.utils.html import format_html
+from django.contrib import admin, messages
 from django.urls import reverse
-from recipes.models import Follow, Recipe, User, CommentReport, Comment
+from django.utils.html import format_html
+
+from recipes.models import Comment, CommentReport, Follow, Recipe, User
 
 
 @admin.register(Recipe)
@@ -10,7 +10,7 @@ class RecipeAdmin(admin.ModelAdmin):
     """
     Admin for Recipe that exposes both the original timing/difficulty fields
     and the newer dietary/popularity fields so all features remain usable.
-    
+
     Admins can delete any recipe through this interface.
     """
 
@@ -39,52 +39,50 @@ class RecipeAdmin(admin.ModelAdmin):
     )
     readonly_fields = ("date_posted", "created_at", "updated_at", "view_recipe_link")
     autocomplete_fields = ("author",)
-    
+
     # Enable deletion in admin (default is True, but making it explicit)
     def has_delete_permission(self, request, obj=None):
         """Allow admins to delete any recipe."""
         return request.user.is_staff
-    
+
     def view_recipe_link(self, obj):
         """Add a link to view the recipe on the site."""
         if obj.pk:
-            url = reverse('recipe_detail', kwargs={'pk': obj.pk})
+            url = reverse("recipe_detail", kwargs={"pk": obj.pk})
             return format_html('<a href="{}" target="_blank">View Recipe</a>', url)
         return "-"
+
     view_recipe_link.short_description = "View on Site"
-    
+
     # Admin actions for bulk operations
-    actions = ['delete_selected_recipes', 'publish_recipes', 'unpublish_recipes']
-    
+    actions = ["delete_selected_recipes", "publish_recipes", "unpublish_recipes"]
+
     def delete_selected_recipes(self, request, queryset):
         """Custom delete action with confirmation message."""
         count = queryset.count()
         queryset.delete()
         self.message_user(
-            request,
-            f'Successfully deleted {count} recipe(s).',
-            messages.SUCCESS
+            request, f"Successfully deleted {count} recipe(s).", messages.SUCCESS
         )
+
     delete_selected_recipes.short_description = "Delete selected recipes"
-    
+
     def publish_recipes(self, request, queryset):
         """Bulk publish recipes."""
         count = queryset.update(is_published=True)
         self.message_user(
-            request,
-            f'Successfully published {count} recipe(s).',
-            messages.SUCCESS
+            request, f"Successfully published {count} recipe(s).", messages.SUCCESS
         )
+
     publish_recipes.short_description = "Publish selected recipes"
-    
+
     def unpublish_recipes(self, request, queryset):
         """Bulk unpublish recipes."""
         count = queryset.update(is_published=False)
         self.message_user(
-            request,
-            f'Successfully unpublished {count} recipe(s).',
-            messages.SUCCESS
+            request, f"Successfully unpublished {count} recipe(s).", messages.SUCCESS
         )
+
     unpublish_recipes.short_description = "Unpublish selected recipes"
 
 
@@ -100,15 +98,16 @@ class UserAdmin(admin.ModelAdmin):
     list_display = ("username", "email", "first_name", "last_name")
     search_fields = ("username", "email", "first_name", "last_name")
 
+
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('user', 'text', 'created_at')
-    search_fields = ('text','user__username')
-    ordering = ('created_at',)
+    list_display = ("user", "text", "created_at")
+    search_fields = ("text", "user__username")
+    ordering = ("created_at",)
+
 
 @admin.register(CommentReport)
 class CommentReportAdmin(admin.ModelAdmin):
-    list_display = ('id','comment', 'created_at','reporter') # for the comments
-    search_fields = ('reporter__username', 'reason', 'comment__text')
-    ordering = ('created_at',)
-
+    list_display = ("id", "comment", "created_at", "reporter")  # for the comments
+    search_fields = ("reporter__username", "reason", "comment__text")
+    ordering = ("created_at",)

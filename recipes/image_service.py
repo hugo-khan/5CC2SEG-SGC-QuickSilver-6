@@ -1,8 +1,10 @@
 # recipes/services/image_service.py
 
-from PIL import Image
 from io import BytesIO
+
 from django.core.files.base import ContentFile
+from PIL import Image
+
 
 class ImageService:
 
@@ -26,5 +28,5 @@ class ImageService:
         buffer.seek(0)
 
         # Return as Django ContentFile
-        new_filename = uploaded_file.name.rsplit('.', 1)[0] + ".jpg"
+        new_filename = uploaded_file.name.rsplit(".", 1)[0] + ".jpg"
         return ContentFile(buffer.read(), new_filename)

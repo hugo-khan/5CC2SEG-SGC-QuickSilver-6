@@ -1,7 +1,8 @@
 import pytest
 from django.urls import reverse
-from recipes.models.user import User
+
 from recipes.models.recipe import recipe
+from recipes.models.user import User
 
 
 @pytest.mark.django_db
@@ -9,13 +10,10 @@ class TestToggleLikeView:
 
     def setup_method(self):
         self.user = User.objects.create_user(
-            username="@testuser",
-            email="test@example.com",
-            password="password123"
+            username="@testuser", email="test@example.com", password="password123"
         )
         self.recipe = Recipe.objects.create(
-            title="Test Recipe",
-            description="A simple test recipe."
+            title="Test Recipe", description="A simple test recipe."
         )
         self.url = reverse("toggle_like", args=[self.recipe.id])
 

@@ -1,9 +1,12 @@
 # recipes/signals.py
 
 import os
+
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
+
 from recipes.models import Recipe
+
 
 def delete_recipe_image(image_field):
     """Delete a FileField/ImageField if it exists."""
@@ -39,4 +42,3 @@ def delete_old_image_on_change(sender, instance, **kwargs):
     # If image changed (new upload OR cleared), delete old file
     if old_image and old_image != new_image:
         delete_recipe_image(old_image)
-

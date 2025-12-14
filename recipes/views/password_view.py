@@ -2,14 +2,15 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.edit import FormView
 from django.urls import reverse
+from django.utils.decorators import method_decorator  # New Import
+from django.views.decorators.cache import never_cache  # New Import
+from django.views.generic.edit import FormView
+
 from recipes.forms import PasswordForm
-from django.utils.decorators import method_decorator # New Import
-from django.views.decorators.cache import never_cache # New Import
 
 
-@method_decorator(never_cache, name='dispatch')
+@method_decorator(never_cache, name="dispatch")
 class PasswordView(LoginRequiredMixin, FormView):
     """
     Allow authenticated users to change their password.
@@ -19,7 +20,7 @@ class PasswordView(LoginRequiredMixin, FormView):
     password update, the user is re-authenticated to maintain their session.
     """
 
-    template_name = 'password.html'
+    template_name = "password.html"
     form_class = PasswordForm
 
     def get_form_kwargs(self, **kwargs):
@@ -32,7 +33,7 @@ class PasswordView(LoginRequiredMixin, FormView):
         """
 
         kwargs = super().get_form_kwargs(**kwargs)
-        kwargs.update({'user': self.request.user})
+        kwargs.update({"user": self.request.user})
         return kwargs
 
     def form_valid(self, form):
@@ -45,7 +46,9 @@ class PasswordView(LoginRequiredMixin, FormView):
         """
 
         form.save()
-        login(self.request, self.request.user, backend=settings.AUTHENTICATION_BACKENDS[0])
+        login(
+            self.request, self.request.user, backend=settings.AUTHENTICATION_BACKENDS[0]
+        )
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -57,4 +60,4 @@ class PasswordView(LoginRequiredMixin, FormView):
         """
 
         messages.add_message(self.request, messages.SUCCESS, "Password updated!")
-        return reverse('dashboard')
+        return reverse("dashboard")

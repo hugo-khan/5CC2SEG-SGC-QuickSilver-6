@@ -7,15 +7,15 @@ class URLConfigTests(TestCase):
 
     def test_admin_url_resolves(self):
         """Test admin URL resolves correctly."""
-        url = reverse('admin:index')
-        self.assertEqual(url, '/admin/')
+        url = reverse("admin:index")
+        self.assertEqual(url, "/admin/")
 
     def test_home_url_resolves(self):
         """Test home URL resolves to login view."""
-        url = reverse('home')
-        self.assertEqual(url, '/')
+        url = reverse("home")
+        self.assertEqual(url, "/")
 
     def test_dashboard_url_resolves(self):
         """Test dashboard URL resolves."""
-        url = reverse('dashboard')
-        self.assertEqual(url, '/dashboard/')
+        url = reverse("dashboard")
+        self.assertEqual(url, "/dashboard/")

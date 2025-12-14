@@ -2,8 +2,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
-from recipes.models import Comment, Recipe
 from recipes.forms import CommentForm
+from recipes.models import Comment, Recipe
 
 
 class AddCommentView(LoginRequiredMixin, View):

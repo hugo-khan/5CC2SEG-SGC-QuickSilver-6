@@ -1,6 +1,8 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
+
 from .recipe import Recipe
+
 
 class SavedRecipe(models.Model):
     user = models.ForeignKey(

@@ -1,8 +1,10 @@
-from django.test import TestCase
 from django.contrib.auth.models import User
-from recipes.models import Recipe
-from saved_recipes.models import SavedRecipe
 from django.db import IntegrityError
+from django.test import TestCase
+from saved_recipes.models import SavedRecipe
+
+from recipes.models import Recipe
+
 
 class SavedRecipeModelTests(TestCase):
     fixtures = ["recipes.json"]
@@ -13,10 +15,7 @@ class SavedRecipeModelTests(TestCase):
         self.spaghetti = Recipe.objects.get(pk=6)
 
     def test_user_can_save_recipe(self):
-        saved = SavedRecipe.objects.create(
-            user=self.user,
-            recipe=self.spaghetti
-        )
+        saved = SavedRecipe.objects.create(user=self.user, recipe=self.spaghetti)
         self.assertEqual(saved.user, self.user)
         self.assertEqual(saved.recipe, self.spaghetti)
 
@@ -37,4 +36,3 @@ class SavedRecipeModelTests(TestCase):
     def test_string_representation(self):
         saved = SavedRecipe.objects.create(user=self.user, recipe=self.spaghetti)
         self.assertEqual(str(saved), "alice saved Spaghetti Bolognese")
-

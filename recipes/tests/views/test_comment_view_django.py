@@ -1,38 +1,37 @@
 """Tests for AddCommentView using Django TestCase."""
+
+from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.messages import get_messages
 
-from recipes.models import Comment, Recipe, User
 from recipes.forms import CommentForm
+from recipes.models import Comment, Recipe, User
 
 
 class AddCommentViewTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username='@alice',
-            password='pass123',
-            email='alice@example.com'
+            username="@alice", password="pass123", email="alice@example.com"
         )
         self.recipe = Recipe.objects.create(
             author=self.user,
-            title='Soup Test',
-            name='Soup Test',
-            description='Test description',
-            ingredients='Test ingredients',
-            instructions='Test instructions',
-            is_published=True
+            title="Soup Test",
+            name="Soup Test",
+            description="Test description",
+            ingredients="Test ingredients",
+            instructions="Test instructions",
+            is_published=True,
         )
 
     def test_logged_in_user_can_post_comment(self):
         """Test that logged in user can post a comment."""
-        self.client.login(username='@alice', password='pass123')
+        self.client.login(username="@alice", password="pass123")
         url = reverse("add_comment", args=[self.recipe.id])
         response = self.client.post(url, {"text": "Great recipe!"})
-        
+
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Comment.objects.count(), 1)
-        
+
         comment = Comment.objects.first()
         self.assertEqual(comment.text, "Great recipe!")
         self.assertEqual(comment.recipe, self.recipe)
@@ -42,7 +41,7 @@ class AddCommentViewTest(TestCase):
         """Test that anonymous users cannot post comments."""
         url = reverse("add_comment", args=[self.recipe.id])
         response = self.client.post(url, {"text": "Nice!"})
-        
+
         # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn("/log_in", response.url)
@@ -63,18 +62,14 @@ class AddCommentViewTest(TestCase):
         """Test that recipe page displays all comments."""
         # Create multiple comments
         for text in ["one", "two", "three", "four"]:
-            Comment.objects.create(
-                recipe=self.recipe,
-                user=self.user,
-                text=text
-            )
-        
+            Comment.objects.create(recipe=self.recipe, user=self.user, text=text)
+
         url = reverse("recipe_detail", args=[self.recipe.id])
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertIn("comments", response.context)
-        
+
         comments = response.context["comments"]
         self.assertEqual(len(comments), 4)
         # Newest first
@@ -85,7 +80,7 @@ class AddCommentViewTest(TestCase):
         """Test that comment modal exists in recipe page."""
         response = self.client.get(reverse("recipe_detail", args=[self.recipe.id]))
         self.assertEqual(response.status_code, 200)
-        
+
         html = response.content.decode()
         # Modal container
         self.assertIn('id="commentModal"', html)
@@ -101,10 +96,10 @@ class AddCommentViewTest(TestCase):
         Comment.objects.create(recipe=self.recipe, user=self.user, text="Oldest")
         Comment.objects.create(recipe=self.recipe, user=self.user, text="Middle")
         Comment.objects.create(recipe=self.recipe, user=self.user, text="Newest")
-        
+
         response = self.client.get(reverse("recipe_detail", args=[self.recipe.id]))
         comments = response.context["comments"]
-        
+
         # Should return: Newest, Middle, Oldest
         self.assertEqual(comments[0].text, "Newest")
         self.assertEqual(comments[1].text, "Middle")
@@ -112,7 +107,7 @@ class AddCommentViewTest(TestCase):
 
     def test_get_add_comment_page(self):
         """Test that GET request to add_comment redirects (template not needed for modal)."""
-        self.client.login(username='@alice', password='pass123')
+        self.client.login(username="@alice", password="pass123")
         url = reverse("add_comment", args=[self.recipe.id])
         # The GET method tries to render a template that doesn't exist
         # This is fine since comments are added via modal, not standalone page
@@ -122,11 +117,10 @@ class AddCommentViewTest(TestCase):
 
     def test_invalid_form_shows_errors(self):
         """Test that invalid form data shows errors."""
-        self.client.login(username='@alice', password='pass123')
+        self.client.login(username="@alice", password="pass123")
         url = reverse("add_comment", args=[self.recipe.id])
         response = self.client.post(url, {"text": ""})
-        
+
         # Should redirect back to recipe detail (form invalid)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Comment.objects.count(), 0)
-

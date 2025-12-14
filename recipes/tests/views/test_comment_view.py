@@ -1,10 +1,10 @@
 import pytest
 from django.urls import reverse
+
+from recipes.forms.comment_form import CommentForm
 from recipes.models.comment import Comment
 from recipes.models.recipe import Recipe
 from recipes.models.user import User
-from recipes.forms.comment_form import CommentForm
-
 
 # COMMENT CREATION TESTS
 
@@ -58,7 +58,6 @@ def test_comment_form_accepts_valid_text():
     assert form.is_valid()
 
 
-
 # RECIPE PAGE COMMENT DISPLAY TESTS
 
 
@@ -83,7 +82,6 @@ def test_recipe_page_displays_all_comments(client):
     # newest first
     assert returned[0].text == "four"
     assert returned[-1].text == "one"
-
 
 
 # FEED PAGE TOP-3 COMMENT TESTS
@@ -136,7 +134,7 @@ def test_comment_modal_exists_in_recipe_page(client):
 
     # Should contain textarea
     assert "<textarea" in html
-    assert "name=\"text\"" in html
+    assert 'name="text"' in html
 
 
 # COMMENT ORDERING TEST

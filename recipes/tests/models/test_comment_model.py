@@ -1,9 +1,11 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+
 from recipes.models.comment import Comment
 from recipes.models.recipe import Recipe
 
 User = get_user_model()
+
 
 class CommentModelTests(TestCase):
 
@@ -21,8 +23,6 @@ class CommentModelTests(TestCase):
 
     def test_comment_str(self):
         comment = Comment.objects.create(
-            user=self.user,
-            recipe=self.recipe,
-            text="Great recipe!"
+            user=self.user, recipe=self.recipe, text="Great recipe!"
         )
         self.assertEqual(str(comment), "Great recipe!")

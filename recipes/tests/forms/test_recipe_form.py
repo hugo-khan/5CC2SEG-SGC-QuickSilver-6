@@ -1,7 +1,8 @@
 from django.test import TestCase
-from recipes.helpers import collect_all_ingredients
-from recipes.forms.recipe_filter_form import RecipeFilterForm
+
 from recipes.forms import RecipeForm
+from recipes.forms.recipe_filter_form import RecipeFilterForm
+from recipes.helpers import collect_all_ingredients
 
 
 class RecipeFormTest(TestCase):
@@ -29,46 +30,56 @@ class RecipeFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("instructions", form.errors)
 
+
 class RecipeFilterFormTest(TestCase):
-    def setUp(self):
-        from recipes.models import User, Recipe
-        # Create a recipe with ingredients to populate the ingredient list
-        self.user = User.objects.create_user(
-            username='@testuser',
-            password='testpass123',
-            email='test@example.com'
+    @classmethod
+    def setUpTestData(cls):
+        from recipes.models import Recipe, User
+
+        cls.user = User.objects.create_user(
+            username="@testuser",
+            password="testpass123",
+            email="test@example.com",
         )
         Recipe.objects.create(
-            author=self.user,
-            title='Test Recipe',
-            name='Test Recipe',
-            description='Test',
-            ingredients='flour, sugar, eggs',
-            instructions='Mix and bake',
-            is_published=True
+            author=cls.user,
+            title="Test Recipe",
+            name="Test Recipe",
+            description="Test",
+            ingredients="flour, sugar, eggs",
+            instructions="Mix and bake",
+            is_published=True,
         )
-        self.ingredients = collect_all_ingredients() # getting ingredients manually here - will test form separately
+        cls.ingredients = collect_all_ingredients()
+
+    def setUp(self):
+        self.form = RecipeFilterForm()
+        self._populate_ingredients_field(self.form)
+
+    def _populate_ingredients_field(self, form):
+        form.fields["ingredients"].queryset = self.ingredients
+        form.fields["ingredients"].choices = [
+            (ingredient, ingredient.title()) for ingredient in self.ingredients
+        ]
 
     def test_choices(self):
-        form = RecipeFilterForm()
-        form.fields['ingredients'].queryset = self.ingredients
-        form.fields['ingredients'].choices = [(i, i.title()) for i in self.ingredients]
-        choice_values = [choice[0] for choice in form.fields['ingredients'].choices]
+        choice_values = [
+            choice[0] for choice in self.form.fields["ingredients"].choices
+        ]
         self.assertGreater(len(choice_values), 0)
 
     def test_form_valid_single_ingredient(self):
         if len(self.ingredients) > 0:
-            data = {'ingredients': [self.ingredients[0]]}
-            form = RecipeFilterForm(data=data)
-            form.fields['ingredients'].queryset = self.ingredients
+            selected = [self.ingredients[0]]
+            form = RecipeFilterForm(data={"ingredients": selected})
+            self._populate_ingredients_field(form)
             self.assertTrue(form.is_valid())
-            self.assertEqual(form.cleaned_data['ingredients'], [self.ingredients[0]])
+            self.assertEqual(form.cleaned_data["ingredients"], selected)
 
     def test_form_valid_multiple_ingredients(self):
         if len(self.ingredients) >= 2:
-            data = {'ingredients': self.ingredients[:2]}
-            form = RecipeFilterForm(data=data)
-            form.fields['ingredients'].queryset = self.ingredients
+            selected = self.ingredients[:2]
+            form = RecipeFilterForm(data={"ingredients": selected})
+            self._populate_ingredients_field(form)
             self.assertTrue(form.is_valid())
-            self.assertEqual(form.cleaned_data['ingredients'], self.ingredients[:2])
-
+            self.assertEqual(form.cleaned_data["ingredients"], selected)

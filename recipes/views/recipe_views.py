@@ -3,9 +3,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView, UpdateView, DeleteView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
 
-from recipes.forms import RecipeForm, CommentForm, CommentReportForm
+from recipes.forms import CommentForm, CommentReportForm, RecipeForm
 from recipes.forms.recipe_filter_form import RecipeFilterForm
 from recipes.helpers import collect_all_ingredients
 from recipes.models import Comment, Follow, Recipe, SavedRecipe, User
@@ -23,7 +29,7 @@ class RecipeListView(ListView):
     def get_queryset(self):
         recipes = Recipe.objects.filter(is_published=True).select_related("author")
 
-        #filtering, for ingredients, dietary requirements
+        # filtering, for ingredients, dietary requirements
         self.form = RecipeFilterForm(self.request.GET or None)
         all_ingredients = collect_all_ingredients()
         self.form.fields["ingredients"].queryset = all_ingredients
@@ -168,7 +174,9 @@ class RecipeDeleteView(LoginRequiredMixin, RecipeAuthorRequiredMixin, DeleteView
     def handle_no_permission(self):
         if not self.request.user.is_authenticated:
             return super().handle_no_permission()
-        messages.error(self.request, "You do not have permission to delete this recipe.")
+        messages.error(
+            self.request, "You do not have permission to delete this recipe."
+        )
         return redirect("recipe_detail", pk=self.get_object().pk)
 
 
@@ -182,16 +190,21 @@ class FeedView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         followed_users = self.request.user.following.values_list("followed", flat=True)
-        recipes = Recipe.objects.filter(author__in=followed_users, is_published=True).select_related("author").order_by("-created_at")
+        recipes = (
+            Recipe.objects.filter(author__in=followed_users, is_published=True)
+            .select_related("author")
+            .order_by("-created_at")
+        )
 
-
-        #filtering for feed page - form for filtering
+        # filtering for feed page - form for filtering
         self.form = RecipeFilterForm(self.request.GET or None)
 
-        #ingredient filtering
+        # ingredient filtering
         all_ingredients = collect_all_ingredients()
-        self.form.fields['ingredients'].choices = [(i,i.title()) for i in all_ingredients]
-        selected_ingredients = self.request.GET.getlist('ingredients')
+        self.form.fields["ingredients"].choices = [
+            (i, i.title()) for i in all_ingredients
+        ]
+        selected_ingredients = self.request.GET.getlist("ingredients")
         if selected_ingredients:
             for ingredient in selected_ingredients:
                 recipes = recipes.filter(ingredients__icontains=ingredient)

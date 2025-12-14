@@ -1,5 +1,7 @@
 from django.test import TestCase
+
 from recipes.forms.comment_form import CommentForm
+
 
 class CommentFormTests(TestCase):
 

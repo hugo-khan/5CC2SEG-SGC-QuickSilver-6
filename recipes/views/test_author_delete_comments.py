@@ -1,15 +1,18 @@
-from django.test import TestCase
-from django.urls import reverse
 from django.contrib.contrib.auth.models import User
 from django.contrib.messages import get_messages
-from recipes.models import Recipe, Comment
+from django.test import TestCase
+from django.urls import reverse
+
+from recipes.models import Comment, Recipe
 
 
 class CommentDeleteViewTests(TestCase):
 
     def setUp(self):
         self.author = User.objects.create_user(username="author", password="pass123")
-        self.other_user = User.objects.create_user(username="otheruser", password="pass123")
+        self.other_user = User.objects.create_user(
+            username="otheruser", password="pass123"
+        )
 
         # Recipe
         self.recipe = Recipe.objects.create(
@@ -24,9 +27,7 @@ class CommentDeleteViewTests(TestCase):
             author=self.author,
         )
         self.comment = Comment.objects.create(
-            user=self.author,
-            recipe=self.recipe,
-            content="Nice recipe!"
+            user=self.author, recipe=self.recipe, content="Nice recipe!"
         )
 
         self.url = reverse("comment_delete", kwargs={"pk": self.comment.pk})
@@ -45,7 +46,6 @@ class CommentDeleteViewTests(TestCase):
         self.assertRedirects(response, self.recipe_url)
         messages = [str(m) for m in get_messages(response.wsgi_request)]
         self.assertIn("You do not have permission to delete this comment.", messages)
-
 
     def test_author_can_delete_comment(self):
         self.client.login(username="author", password="pass123")

@@ -40,6 +40,7 @@ class CommentDeleteView(LoginRequiredMixin, CommentAuthorRequiredMixin, DeleteVi
         if not self.request.user.is_authenticated:
             return super().handle_no_permission()
         comment = self.get_object()
-        messages.error(self.request, "You do not have permission to delete this comment.")
+        messages.error(
+            self.request, "You do not have permission to delete this comment."
+        )
         return redirect("recipe_detail", pk=comment.recipe.pk)
-

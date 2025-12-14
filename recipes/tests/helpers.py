@@ -1,8 +1,10 @@
+from django.test import TestCase
 from django.urls import reverse
 from with_asserts.mixin import AssertHTMLMixin
-from recipes.models import Recipe, User
+
 from recipes.helpers import collect_all_ingredients
-from django.test import TestCase
+from recipes.models import Recipe, User
+
 
 def reverse_with_next(url_name, next_url):
     """Extended version of reverse to generate URLs with redirects"""
@@ -13,18 +15,17 @@ def reverse_with_next(url_name, next_url):
 
 class LogInTester:
     """Class support login in tests."""
- 
+
     def _is_logged_in(self):
         """Returns True if a user is logged in.  False otherwise."""
 
-        return '_auth_user_id' in self.client.session.keys()
+        return "_auth_user_id" in self.client.session.keys()
+
 
 class MenuTesterMixin(AssertHTMLMixin):
     """Class to extend tests with tools to check the presents of menu items."""
 
-    menu_urls = [
-        reverse('profile'), reverse('log_out')
-    ]
+    menu_urls = [reverse("profile"), reverse("log_out")]
 
     def assert_menu(self, response):
         """Check that menu is present."""
@@ -35,9 +36,10 @@ class MenuTesterMixin(AssertHTMLMixin):
 
     def assert_no_menu(self, response):
         """Check that no menu is present."""
-        
+
         for url in self.menu_urls:
             self.assertNotHTML(response, f'a[href="{url}"]')
+
 
 class TestCollectAllIngredients(TestCase):
     def setUp(self):
@@ -49,7 +51,7 @@ class TestCollectAllIngredients(TestCase):
             ingredients="flour, sugar, eggs",
             instructions="Mix and bake",
             author=self.user,
-            is_published=True
+            is_published=True,
         )
         Recipe.objects.create(
             title="Pancakes",
@@ -57,7 +59,7 @@ class TestCollectAllIngredients(TestCase):
             ingredients="milk, eggs, flour",
             instructions="Mix and fry",
             author=self.user,
-            is_published=True
+            is_published=True,
         )
 
     def test_collect_all_ingredients_returns_unique_list(self):
@@ -73,7 +75,7 @@ class TestCollectAllIngredients(TestCase):
             ingredients=" lettuce , tomato , cucumber ",
             instructions="Mix together",
             author=self.user,
-            is_published=True
+            is_published=True,
         )
         ingredients = collect_all_ingredients()
         self.assertIn("lettuce", ingredients)

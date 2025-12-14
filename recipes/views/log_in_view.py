@@ -1,10 +1,12 @@
+from urllib.parse import urlencode
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.shortcuts import redirect, render
 from django.urls import NoReverseMatch, reverse
 from django.views import View
-from urllib.parse import urlencode
+
 from recipes.forms import LogInForm
 from recipes.views.decorators import LoginProhibitedMixin
 
@@ -18,7 +20,7 @@ class LogInView(LoginProhibitedMixin, View):
     away automatically via `LoginProhibitedMixin`.
     """
 
-    http_method_names = ['get', 'post']
+    http_method_names = ["get", "post"]
     redirect_when_logged_in_url = settings.REDIRECT_URL_WHEN_LOGGED_IN
 
     def get(self, request):
@@ -26,7 +28,7 @@ class LogInView(LoginProhibitedMixin, View):
         Handle GET requests by displaying the login form.
         """
 
-        self.next = request.GET.get('next') or ''
+        self.next = request.GET.get("next") or ""
         return self.render()
 
     def post(self, request):
@@ -39,12 +41,14 @@ class LogInView(LoginProhibitedMixin, View):
         """
 
         form = LogInForm(request.POST)
-        self.next = request.POST.get('next') or settings.REDIRECT_URL_WHEN_LOGGED_IN
+        self.next = request.POST.get("next") or settings.REDIRECT_URL_WHEN_LOGGED_IN
         user = form.get_user()
         if user is not None:
             login(request, user)
             return redirect(self.next)
-        messages.add_message(request, messages.ERROR, "The credentials provided were invalid!")
+        messages.add_message(
+            request, messages.ERROR, "The credentials provided were invalid!"
+        )
         return self.render()
 
     def render(self):
@@ -54,25 +58,25 @@ class LogInView(LoginProhibitedMixin, View):
 
         form = LogInForm()
         context = {
-            'form': form,
-            'next': self.next,
-            'google_login_enabled': getattr(settings, 'GOOGLE_OAUTH_ENABLED', False),
-            'google_login_url': self._google_login_url(),
+            "form": form,
+            "next": self.next,
+            "google_login_enabled": getattr(settings, "GOOGLE_OAUTH_ENABLED", False),
+            "google_login_url": self._google_login_url(),
         }
-        return render(self.request, 'log_in.html', context)
+        return render(self.request, "log_in.html", context)
 
     def _google_login_url(self):
         """
         Build the Google OAuth entry point if the provider is configured.
         """
 
-        if not getattr(settings, 'GOOGLE_OAUTH_ENABLED', False):
+        if not getattr(settings, "GOOGLE_OAUTH_ENABLED", False):
             return None
         try:
-            base_url = reverse('google_login')
+            base_url = reverse("google_login")
         except NoReverseMatch:
             return None
-        params = {'process': 'login'}
+        params = {"process": "login"}
         if self.next:
-            params['next'] = self.next
-        return f'{base_url}?{urlencode(params)}'
+            params["next"] = self.next
+        return f"{base_url}?{urlencode(params)}"

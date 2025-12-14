@@ -1,11 +1,11 @@
-from .user import User
-from .recipe import Recipe
-from .follow import Follow
-from .saved_recipes import SavedRecipe
+from .ai_chat import ChatMessage, RecipeDraftSuggestion
 from .comment import Comment
-from .like import Like
-from .ai_chat import RecipeDraftSuggestion, ChatMessage
 from .comment_report import CommentReport
+from .follow import Follow
+from .like import Like
+from .recipe import Recipe
+from .saved_recipes import SavedRecipe
+from .user import User
 
 __all__ = [
     "User",

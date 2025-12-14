@@ -1,8 +1,10 @@
+from urllib.parse import urlencode
+
 from django.conf import settings
 from django.contrib.auth import login
-from django.views.generic.edit import FormView
 from django.urls import NoReverseMatch, reverse
-from urllib.parse import urlencode
+from django.views.generic.edit import FormView
+
 from recipes.forms import SignUpForm
 from recipes.views.decorators import LoginProhibitedMixin
 
@@ -45,15 +47,15 @@ class SignUpView(LoginProhibitedMixin, FormView):
         """
 
         context = super().get_context_data(**kwargs)
-        enabled = getattr(settings, 'GOOGLE_OAUTH_ENABLED', False)
-        context['google_login_enabled'] = False
-        context['google_login_url'] = None
+        enabled = getattr(settings, "GOOGLE_OAUTH_ENABLED", False)
+        context["google_login_enabled"] = False
+        context["google_login_url"] = None
         if enabled:
             try:
-                base_url = reverse('google_login')
+                base_url = reverse("google_login")
             except NoReverseMatch:
                 return context
-            params = {'process': 'login'}
-            context['google_login_url'] = f'{base_url}?{urlencode(params)}'
-            context['google_login_enabled'] = True
+            params = {"process": "login"}
+            context["google_login_url"] = f"{base_url}?{urlencode(params)}"
+            context["google_login_enabled"] = True
         return context

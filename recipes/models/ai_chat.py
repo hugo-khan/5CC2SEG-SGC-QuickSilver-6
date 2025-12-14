@@ -13,18 +13,18 @@ from django.utils import timezone
 class RecipeDraftSuggestion(models.Model):
     """
     Stores AI-generated recipe suggestions before they are published.
-    
+
     A draft can be:
     - DRAFT: Generated but not yet published
     - PUBLISHED: Successfully published as a Recipe
     - FAILED: Generation or publishing failed
     """
-    
+
     class Status(models.TextChoices):
         DRAFT = "DRAFT", "Draft"
         PUBLISHED = "PUBLISHED", "Published"
         FAILED = "FAILED", "Failed"
-    
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -36,16 +36,15 @@ class RecipeDraftSuggestion(models.Model):
     dietary_requirements = models.TextField(
         blank=True,
         default="",
-        help_text="Optional dietary restrictions specified by the user"
+        help_text="Optional dietary restrictions specified by the user",
     )
     draft_payload = models.JSONField(
-        default=dict,
-        help_text="Structured recipe data from AI (form_fields dict)"
+        default=dict, help_text="Structured recipe data from AI (form_fields dict)"
     )
     assistant_display = models.TextField(
         blank=True,
         default="",
-        help_text="Formatted display text for the chat interface"
+        help_text="Formatted display text for the chat interface",
     )
     status = models.CharField(
         max_length=20,
@@ -58,15 +57,15 @@ class RecipeDraftSuggestion(models.Model):
         null=True,
         blank=True,
         related_name="source_draft",
-        help_text="Link to the published Recipe if status is PUBLISHED"
+        help_text="Link to the published Recipe if status is PUBLISHED",
     )
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-    
+
     class Meta:
         ordering = ["-created_at"]
         verbose_name = "Recipe Draft Suggestion"
         verbose_name_plural = "Recipe Draft Suggestions"
-    
+
     def __str__(self):
         title = self.draft_payload.get("title", "Untitled")
         return f"Draft: {title} ({self.status})"
@@ -75,16 +74,16 @@ class RecipeDraftSuggestion(models.Model):
 class ChatMessage(models.Model):
     """
     Stores individual chat messages in a conversation.
-    
+
     Each message has a role:
     - user: Message from the user
     - assistant: Response from the AI
     """
-    
+
     class Role(models.TextChoices):
         USER = "user", "User"
         ASSISTANT = "assistant", "Assistant"
-    
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -100,7 +99,7 @@ class ChatMessage(models.Model):
         max_length=100,
         blank=True,
         default="",
-        help_text="Optional thread identifier for grouping conversations"
+        help_text="Optional thread identifier for grouping conversations",
     )
     # Link to the draft if this message resulted in one
     related_draft = models.ForeignKey(
@@ -110,13 +109,12 @@ class ChatMessage(models.Model):
         blank=True,
         related_name="messages",
     )
-    
+
     class Meta:
         ordering = ["created_at"]
         verbose_name = "Chat Message"
         verbose_name_plural = "Chat Messages"
-    
+
     def __str__(self):
         preview = self.content[:50] + "..." if len(self.content) > 50 else self.content
         return f"[{self.role}] {preview}"
-

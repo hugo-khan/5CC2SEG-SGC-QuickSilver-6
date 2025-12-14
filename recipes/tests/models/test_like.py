@@ -1,6 +1,7 @@
 from django.test import TestCase
-from recipes.models.user import User
+
 from recipes.models.recipe import Recipe
+from recipes.models.user import User
 
 
 class TestLikeModel(TestCase):

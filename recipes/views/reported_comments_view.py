@@ -1,7 +1,9 @@
-from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import render, redirect, get_object_or_404
-from recipes.models import Comment, CommentReport
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import get_object_or_404, redirect, render
+
+from recipes.models import Comment, CommentReport
+
 
 @staff_member_required
 def reported_comments_view(request):
@@ -21,9 +23,5 @@ def reported_comments_view(request):
 
         return redirect("reported_comments")
 
-
     reports = CommentReport.objects.select_related("comment", "reporter").all()
     return render(request, "reported_comments.html", {"reports": reports})
-
-
-

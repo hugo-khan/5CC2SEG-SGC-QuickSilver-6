@@ -6,18 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0010_commentreport'),
+        ("recipes", "0010_commentreport"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='recipe',
-            name='image',
-            field=models.ImageField(blank=True, help_text='Main image for this recipe', null=True, upload_to='recipes/'),
+            model_name="recipe",
+            name="image",
+            field=models.ImageField(
+                blank=True,
+                help_text="Main image for this recipe",
+                null=True,
+                upload_to="recipes/",
+            ),
         ),
         migrations.AlterField(
-            model_name='recipe',
-            name='image_url',
-            field=models.URLField(blank=True, help_text='External image URL', null=True),
+            model_name="recipe",
+            name="image_url",
+            field=models.URLField(
+                blank=True, help_text="External image URL", null=True
+            ),
         ),
     ]

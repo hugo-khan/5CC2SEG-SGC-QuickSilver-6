@@ -1,5 +1,7 @@
 from django import forms
+
 from recipes.models import Recipe
+
 
 class RecipeForm(forms.ModelForm):
     """Form used for creating and updating recipes."""
@@ -39,6 +41,3 @@ class RecipeForm(forms.ModelForm):
         if not instructions:
             raise forms.ValidationError("Please provide the cooking instructions.")
         return instructions
-
-
-

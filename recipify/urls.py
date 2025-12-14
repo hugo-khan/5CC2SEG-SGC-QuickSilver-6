@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -21,8 +22,8 @@ from django.urls import include, path
 
 from recipes.views.admin_login_view import AdminLoginView
 from recipes.views.author_recipes_view import author_recipes
-from recipes.views.comment_view import AddCommentView
 from recipes.views.comment_delete_view import CommentDeleteView
+from recipes.views.comment_view import AddCommentView
 from recipes.views.dashboard_view import dashboard
 from recipes.views.delete_account_view import DeleteAccountView
 from recipes.views.edit_profile_view import ProfileUpdateView  # Edit profile
@@ -34,13 +35,11 @@ from recipes.views.profile_view import profile  # Display profile
 from recipes.views.recipe_search_view import recipe_search
 from recipes.views.sign_up_view import SignUpView
 
-
 urlpatterns = [
     # Core pages
     path("admin/", admin.site.urls),
     path("", LogInView.as_view(), name="home"),
     path("dashboard/", dashboard, name="dashboard"),
-
     # Auth & profile
     path("log_in/", LogInView.as_view(), name="log_in"),
     path("admin/login/", AdminLoginView.as_view(), name="admin_login"),
@@ -54,10 +53,8 @@ urlpatterns = [
     ),  # Edit profile
     path("sign_up/", SignUpView.as_view(), name="sign_up"),
     path("account/delete/", DeleteAccountView.as_view(), name="delete_account"),
-
     # Google OAuth via allauth
     path("accounts/", include("allauth.urls")),
-
     # Recipe-related features (search, author listing, comments, likes)
     path("recipes/search/", recipe_search, name="recipe_search"),
     path("author/<int:author_id>/recipes/", author_recipes, name="author_recipes"),
@@ -76,7 +73,6 @@ urlpatterns = [
         ToggleLikeView.as_view(),
         name="toggle_like",
     ),
-
     # Include app URLs
     path("", include("recipes.urls")),
 ]
