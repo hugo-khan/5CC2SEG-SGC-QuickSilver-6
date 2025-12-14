@@ -69,6 +69,14 @@
     }
 
     /**
+     * Backward-compatible alias used by pre-rendered assistant messages.
+     * Keeps legacy calls working after the safer renderer rename.
+     */
+    function renderMarkdownSafe(text) {
+        return renderAssistantContent(text);
+    }
+
+    /**
      * Build HTML for a chat message.
      * @param {string} role - 'user' or 'assistant'
      * @param {string} content - The message content
