@@ -109,9 +109,32 @@ class Recipe(models.Model):
         return self.name or self.title
 
     def save(self, *args, **kwargs):
-        # Ensure updated_at always set
+        """
+        - Ensure updated_at always set
+        - Compress new uploaded images
+        - Delete old image if replaced or cleared
+        """
+
+        # Capture old image before potential replacement
+        old_image = None
+        if self.pk:
+            try:
+                old_image = Recipe.objects.get(pk=self.pk).image
+            except Recipe.DoesNotExist:
+                pass
+
+        # Always bump updated_at
         self.updated_at = timezone.now()
+
+        # Compress uploaded image before saving
+        if self.image and hasattr(self.image, "file"):
+            self.image = ImageService.compress_image(self.image)
+
         super().save(*args, **kwargs)
+
+        # Delete the previous image file if it changed
+        if old_image and old_image != self.image:
+            old_image.delete(save=False)
 
     @property
     def total_time_minutes(self) -> int:
@@ -142,28 +165,4 @@ class Recipe(models.Model):
             reverse('recipe_share', kwargs={'share_token': self.share_token})
         )
 
-    def save(self, *args, **kwargs):
-        """
-        - Compress new uploaded images
-        - Delete old image if replaced or cleared
-        """
-
-        # Get old image (if this is an update)
-        old_image = None
-        if self.pk:
-            try:
-                old_image = Recipe.objects.get(pk=self.pk).image
-            except Recipe.DoesNotExist:
-                pass
-
-        # If a new image was uploaded, compress it
-        if self.image and hasattr(self.image, "file"):
-            self.image = ImageService.compress_image(self.image)
-
-        super().save(*args, **kwargs)
-
-        # --- DELETE OLD IMAGE ---
-        # If there WAS an old image but it is DIFFERENT now → delete it
-        if old_image and old_image != self.image:
-            old_image.delete(save=False)
 
