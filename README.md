@@ -2,17 +2,19 @@ QUICKSILVER-6 Team Project
 
 ## Team members
 The members of the team are:
-- Amey
-- Hugo
-- Rob
-- Joachim
-- Dhruv
+- Amey Tripathi
+- Hugo Khan
+- Robert Smith
+- Joachim Siallagan
+- Dhruv Deb
 
 ## Project structure
 The project is called `recipify`.  It currently consists of a single app `recipes`.
 
 ## Deployed version of the application
-The deployed version of the application can be found at [*enter url here*](*enter_url_here*).
+The deployed version of the application can be found at [*enter url here*](*jansonsport.pythonanywhere.com*).
+
+## Paste the above link into a browser to see the deployed website.
 
 ## Installation instructions
 To install the software and use it in your local development environment, you must first set up and activate a local development environment.  The project source code has been developed using Python 3.12, so you are recommended to use the same version.  From the root of the project:
@@ -30,9 +32,10 @@ Install all required packages:
 $ pip3 install -r requirements.txt
 ```
 
-Migrate the database:
+Migrate the database (it has already been left in for you but still follow the instructions):
 
 ```
+$ python3 manage.py makemigrations
 $ python3 manage.py migrate
 ```
 
@@ -42,21 +45,29 @@ Seed the development database with:
 $ python3 manage.py seed
 ```
 
+Seed the images into the website for all recipes:
+```
+$ python3 manage.py populate_images --overwrite
+```
+
+Enable Admin via user @johndoe:
+```
+$ python3 make_admin.py
+```
+
+Run the website:
+```
+$ python3 manage.py runserver
+```
+
 Run all tests with:
 ```
 $ python3 manage.py test
 ```
 
-### Google OAuth set-up
+## Google OAuth & AI Chef set-up
+All keys have been provided in the .env file, there is no need to change anything, this will work automatically
 
-1. Create OAuth 2.0 credentials in the Google Cloud Console (Web application) and add the callback `http://localhost:8000/accounts/google/login/callback/`.
-2. Export the credentials before starting Django:
-   ```
-   export GOOGLE_CLIENT_ID=<client-id>
-   export GOOGLE_CLIENT_SECRET=<client-secret>
-   ```
-3. Ensure the default `Site` entry (ID 1) matches your development domain (`example.com` is fine locally). Update it via the Django admin if you deploy under a different host.
-4. Restart the server. The “Continue with Google” option on the login screen appears automatically once both variables are present.
 
 *The above instructions should work in your version of the application.  If there are deviations, declare those here in bold.  Otherwise, remove this line.*
 

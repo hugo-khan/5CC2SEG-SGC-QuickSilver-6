@@ -46,18 +46,31 @@
         const escaped = escapeHtml(text || '');
 
         // Allow only safe <a href="..."> links (http, https, or relative)
-        const withLinks = escaped.replace(/&lt;a\s+[^&]*href="([^"]+)"[^&]*&gt;(.*?)&lt;\/a&gt;/gi, function(_, href, linkText) {
-            const safeHref = (href || '').trim();
-            const lowerHref = safeHref.toLowerCase();
+        const withLinks = escaped
+            // Handle escaped quotes (&quot;) as well as raw quotes
+            .replace(/&lt;a\s+[^&]*href=&quot;([^"&]+)&quot;[^&]*&gt;(.*?)&lt;\/a&gt;/gi, function(_, href, linkText) {
+                const safeHref = (href || '').trim();
+                const lowerHref = safeHref.toLowerCase();
 
-            // Block javascript or data URIs
-            const isSafeProtocol = lowerHref.startsWith('http://') || lowerHref.startsWith('https://') || lowerHref.startsWith('/');
-            if (!isSafeProtocol || lowerHref.startsWith('javascript:') || lowerHref.startsWith('data:')) {
-                return linkText; // drop the link, keep text
-            }
+                // Block javascript or data URIs
+                const isSafeProtocol = lowerHref.startsWith('http://') || lowerHref.startsWith('https://') || lowerHref.startsWith('/');
+                if (!isSafeProtocol || lowerHref.startsWith('javascript:') || lowerHref.startsWith('data:')) {
+                    return linkText; // drop the link, keep text
+                }
 
-            return `<a href="${escapeHtml(safeHref)}" class="fw-bold">${linkText}</a>`;
-        });
+                return `<a href="${escapeHtml(safeHref)}" class="fw-bold">${linkText}</a>`;
+            })
+            .replace(/&lt;a\s+[^&]*href="([^"]+)"[^&]*&gt;(.*?)&lt;\/a&gt;/gi, function(_, href, linkText) {
+                const safeHref = (href || '').trim();
+                const lowerHref = safeHref.toLowerCase();
+
+                const isSafeProtocol = lowerHref.startsWith('http://') || lowerHref.startsWith('https://') || lowerHref.startsWith('/');
+                if (!isSafeProtocol || lowerHref.startsWith('javascript:') || lowerHref.startsWith('data:')) {
+                    return linkText;
+                }
+
+                return `<a href="${escapeHtml(safeHref)}" class="fw-bold">${linkText}</a>`;
+            });
 
         // Bold: **text**
         let html = withLinks.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -253,6 +266,11 @@
         // Apply markdown rendering to any pre-rendered assistant messages
         const existingAssistantMessages = document.querySelectorAll('.chat-message-assistant .message-content');
         existingAssistantMessages.forEach(function(el) {
+            const html = el.innerHTML || '';
+            // If server already rendered safe anchors, keep them as-is; otherwise, render markdown safely.
+            if (html.includes('<a ')) {
+                return; // preserve existing HTML (e.g., publish success link)
+            }
             el.innerHTML = renderMarkdownSafe(el.textContent);
         });
 
@@ -423,8 +441,51 @@
             })
             .then(function(result) {
                 if (result.ok && result.data.success) {
-                    // Redirect to the published recipe
-                    window.location.href = result.data.recipe_url;
+                    // Show success message with a guaranteed clickable hyperlink
+                    const chatTranscript = document.getElementById('chat-transcript');
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'chat-message chat-message-assistant mb-3';
+
+                    const outer = document.createElement('div');
+                    outer.className = 'd-flex';
+
+                    const bubble = document.createElement('div');
+                    bubble.className = 'message-bubble bg-light rounded-3 p-3';
+                    bubble.style.maxWidth = '80%';
+
+                    const header = document.createElement('div');
+                    header.className = 'fw-bold text-muted small mb-1';
+                    header.innerHTML = '<span class="bi-robot"></span> AI Chef';
+
+                    const body = document.createElement('div');
+                    body.className = 'message-content';
+                    body.style.whiteSpace = 'pre-wrap';
+                    body.append('🎉 Recipe published successfully! View it ');
+                    const link = document.createElement('a');
+                    link.className = 'fw-bold';
+                    link.href = result.data.recipe_url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = 'here';
+                    body.append(link);
+                    body.append('.');
+
+                    const time = document.createElement('div');
+                    time.className = 'text-muted small mt-1';
+                    time.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+                    bubble.append(header, body, time);
+                    outer.appendChild(bubble);
+                    wrapper.appendChild(outer);
+
+                    chatTranscript.appendChild(wrapper);
+                    chatTranscript.scrollTop = chatTranscript.scrollHeight;
+
+                    // Disable publish button now that it's done
+                    if (publishBtn) {
+                        publishBtn.disabled = true;
+                        publishBtn.innerHTML = '<span class="bi-check-circle"></span> Published';
+                    }
                 } else {
                     // Show error
                     alert('Failed to publish: ' + (result.data.error || 'Unknown error'));
