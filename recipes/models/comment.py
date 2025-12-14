@@ -22,6 +22,10 @@ class Comment(models.Model):
         related_name="comments",
     )
 
+    def __str__(self):
+        """Return the comment text as string representation."""
+        return self.text
+
     class Meta:
         """Newest comments first."""
 

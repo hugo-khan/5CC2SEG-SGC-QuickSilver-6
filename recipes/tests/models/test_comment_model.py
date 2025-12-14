@@ -10,10 +10,13 @@ class CommentModelTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="pass123")
         self.recipe = Recipe.objects.create(
+            author=self.user,
             title="Test Recipe",
+            name="Test Recipe",
             description="Description",
+            ingredients="Ingredients",
             instructions="Steps",
-            user=self.user,
+            is_published=True,
         )
 
     def test_comment_str(self):

@@ -23,7 +23,7 @@ def reported_comments_view(request):
 
 
     reports = CommentReport.objects.select_related("comment", "reporter").all()
-    return render(request, "admin/reported_comments.html", {"reports": reports})
+    return render(request, "reported_comments.html", {"reports": reports})
 
 
 
